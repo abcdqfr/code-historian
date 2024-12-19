@@ -2,6 +2,45 @@
 
 A powerful tool for analyzing code evolution and creating a comprehensive knowledge base of changes. Originally developed during an AI-assisted refactoring project, Code Historian helps developers understand, document, and learn from their code's history.
 
+## Usage
+
+Code Historian can be used either directly or installed globally:
+
+### Direct Usage (No Installation)
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/code-historian.git
+
+# Run from any project
+cd my-project
+../code-historian/tools/code-historian/code-historian --files coordinator,sensor --ext py
+```
+
+### Global Installation
+```bash
+# Install globally
+./install.sh  # Makes 'code-historian' available system-wide
+cd any-project
+code-historian --files coordinator,sensor --ext py
+```
+
+### Configuration Options
+```bash
+# Global defaults (after installation)
+~/.config/code-historian/config.sh
+
+# Project-specific (optional)
+./code-historian  # Your customized version in project root
+```
+
+The installation script (`install.sh`) provides several benefits:
+- Makes the tool available system-wide in `~/.local/bin`
+- Creates a global config directory in `~/.config/code-historian`
+- Allows running from any directory without path references
+- Follows Unix/Linux conventions for tool installation
+- Useful for teams standardizing on the tool
+- Ideal for CI/CD environments
+
 ## Why Code Historian?
 
 When refactoring or maintaining complex codebases, understanding the evolution of code is crucial. Code Historian:
@@ -10,6 +49,29 @@ When refactoring or maintaining complex codebases, understanding the evolution o
 - Helps prevent regression by maintaining knowledge
 - Makes code evolution visible and understandable
 - Assists in knowledge transfer between team members
+
+## Installation
+
+### Method 1: Direct Use
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/code-historian.git
+
+# Optional: Copy example configuration to your project
+cp code-historian/tools/code-historian/examples/ha-component ./code-historian
+chmod +x code-historian
+```
+
+### Method 2: Global Installation
+```bash
+# Clone and install
+git clone https://github.com/yourusername/code-historian.git
+cd code-historian
+./install.sh
+
+# Now available everywhere as 'code-historian'
+code-historian --help
+```
 
 ## Core Dependencies
 
@@ -103,17 +165,21 @@ Common Change Patterns:
 
 ### Basic Analysis
 ```bash
-./analyze_history.sh --files model,view,controller
+code-historian --files model,view,controller
 ```
 
 ### Custom Directories
 ```bash
-./analyze_history.sh --history-dir .vscode/history --source-dir app --output-dir reports
+code-historian --history-dir .vscode/history --source-dir app --output-dir reports
 ```
 
 ### Project-Specific Analysis
 ```bash
-./analyze_history.sh --files "coordinator,sensor,const" --output-dir "docs/changes"
+# Using project configuration
+./code-historian
+
+# Or with custom parameters
+./code-historian --files "coordinator,sensor,const" --output-dir "docs/changes"
 ```
 
 ## Integration with Development Workflow
@@ -132,6 +198,20 @@ Common Change Patterns:
 - Preserve context across team changes
 - Track feature development history
 - Document bug fixes and solutions
+
+## Configuration
+
+### Global Configuration
+The global configuration file is located at `~/.config/code-historian/config.sh` and contains default settings for all projects.
+
+### Project Configuration
+Create a `code-historian` script in your project root to customize:
+- Files to analyze
+- Output directories
+- Custom categories
+- Project-specific patterns
+
+Example configurations are available in the `examples/` directory.
 
 ## Future Enhancements
 
