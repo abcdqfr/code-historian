@@ -6,56 +6,73 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Default installation directory
-INSTALL_DIR="$HOME/.local/bin"
-CONFIG_DIR="$HOME/.config/code-historian"
+# Check for required dependencies
+check_dependencies() {
+    local missing_deps=()
+    
+    # Check for Python 3
+    if ! command -v python3 &> /dev/null; then
+        missing_deps+=("python3")
+    fi
+    
+    # Check for pip
+    if ! command -v pip3 &> /dev/null; then
+        missing_deps+=("python3-pip")
+    fi
+    
+    # Check for Graphviz system package
+    if ! command -v dot &> /dev/null; then
+        missing_deps+=("graphviz")
+    fi
+    
+    if [ ${#missing_deps[@]} -ne 0 ]; then
+        echo -e "${RED}Missing required dependencies: ${missing_deps[*]}${NC}"
+        echo "Please install them using your package manager:"
+        echo "For Ubuntu/Debian:"
+        echo "  sudo apt-get update"
+        echo "  sudo apt-get install ${missing_deps[*]}"
+        echo "For Fedora:"
+        echo "  sudo dnf install ${missing_deps[*]}"
+        echo "For macOS:"
+        echo "  brew install ${missing_deps[*]}"
+        exit 1
+    fi
+}
 
-# Create installation directory if it doesn't exist
-mkdir -p "$INSTALL_DIR"
-mkdir -p "$CONFIG_DIR"
+# Install Python dependencies
+install_python_deps() {
+    echo -e "${BLUE}Installing Python dependencies...${NC}"
+    pip3 install graphviz --user
+}
 
-# Copy the main script
-cp code-historian.sh "$INSTALL_DIR/code-historian"
-chmod +x "$INSTALL_DIR/code-historian"
+# Main installation
+echo -e "${BLUE}Installing Code Historian...${NC}"
 
-# Create default config
-cat > "$CONFIG_DIR/config.sh" << 'EOL'
-# Code Historian Configuration
+# Check dependencies
+check_dependencies
 
-# Default directories
-HISTORY_DIR=".history"
-SOURCE_DIR="src"
-OUTPUT_DIR="docs/changes"
+# Install Python dependencies
+install_python_deps
 
-# Default file patterns to ignore
-IGNORE_PATTERNS=(
-    "*/__pycache__/*"
-    "*.pyc"
-    "*.pyo"
-    "*.pyd"
-    ".git/*"
-    ".venv/*"
-)
+# Create installation directory
+INSTALL_DIR="/usr/local/bin"
+if [ ! -d "$INSTALL_DIR" ]; then
+    echo -e "${BLUE}Creating installation directory...${NC}"
+    sudo mkdir -p "$INSTALL_DIR"
+fi
 
-# Default categories to track
-CATEGORIES=(
-    "Entity Management"
-    "Device Registry"
-    "State Updates"
-    "Configuration Flow"
-    "Platform Setup"
-    "Error Handling"
-    "Logging"
-    "Documentation"
-)
-EOL
+# Copy files
+echo -e "${BLUE}Copying files...${NC}"
+sudo cp code-historian "$INSTALL_DIR/"
+sudo cp timeline_generator.py "$INSTALL_DIR/"
 
-echo -e "${GREEN}Code Historian installed successfully!${NC}"
-echo -e "Main script: ${BLUE}$INSTALL_DIR/code-historian${NC}"
-echo -e "Config file: ${BLUE}$CONFIG_DIR/config.sh${NC}"
+# Make executable
+sudo chmod +x "$INSTALL_DIR/code-historian"
+sudo chmod +x "$INSTALL_DIR/timeline_generator.py"
+
+echo -e "${GREEN}Installation complete!${NC}"
+echo "You can now use code-historian from anywhere."
 echo
-echo "Add this to your .bashrc or .zshrc:"
-echo -e "${BLUE}export PATH=\$PATH:$INSTALL_DIR${NC}"
-echo
-echo "Usage:"
-echo "  code-historian --help" 
+echo "Example usage:"
+echo "  code-historian --files myfile --ext py --timeline"
+echo "  code-historian --recursive --pattern '*.js' --timeline"

@@ -1,243 +1,142 @@
 # Code Historian
 
-A powerful tool for analyzing code evolution and creating a comprehensive knowledge base of changes. Originally developed during an AI-assisted refactoring project, Code Historian helps developers understand, document, and learn from their code's history.
+A powerful tool for analyzing the evolution of code in software projects. Code Historian tracks changes in source files, categorizes them according to common software patterns, and generates detailed reports with visual timelines.
 
-## Usage
+## Features
 
-Code Historian can be used either directly or installed globally:
+- **Flexible File Analysis**: Analyze specific files or use pattern matching to process multiple files
+- **Recursive Directory Support**: Search for files in subdirectories
+- **Smart Change Detection**: Automatically categorizes changes into 15 different categories:
+  - Architecture (structural changes)
+  - API (interface changes)
+  - Logic (flow modifications)
+  - Data (structure changes)
+  - Error Handling
+  - Logging
+  - Documentation
+  - Testing
+  - Performance
+  - Security
+  - Refactoring
+  - Dependencies
+  - Configuration
+  - UI/UX
+  - Accessibility
 
-### Direct Usage (No Installation)
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/code-historian.git
-
-# Run from any project
-cd my-project
-../code-historian/tools/code-historian/code-historian --files coordinator,sensor --ext py
-```
-
-### Global Installation
-```bash
-# Install globally
-./install.sh  # Makes 'code-historian' available system-wide
-cd any-project
-code-historian --files coordinator,sensor --ext py
-```
-
-### Configuration Options
-```bash
-# Global defaults (after installation)
-~/.config/code-historian/config.sh
-
-# Project-specific (optional)
-./code-historian  # Your customized version in project root
-```
-
-The installation script (`install.sh`) provides several benefits:
-- Makes the tool available system-wide in `~/.local/bin`
-- Creates a global config directory in `~/.config/code-historian`
-- Allows running from any directory without path references
-- Follows Unix/Linux conventions for tool installation
-- Useful for teams standardizing on the tool
-- Ideal for CI/CD environments
-
-## Why Code Historian?
-
-When refactoring or maintaining complex codebases, understanding the evolution of code is crucial. Code Historian:
-- Tracks the reasoning behind changes
-- Identifies patterns in development
-- Helps prevent regression by maintaining knowledge
-- Makes code evolution visible and understandable
-- Assists in knowledge transfer between team members
+- **Visual Timelines**: Generate visual representations of code evolution using Graphviz
+- **Detailed Statistics**: Track lines added, removed, and net changes
+- **Git-Style Diffs**: View changes in familiar diff format
+- **Markdown Reports**: Generate comprehensive markdown reports with links to visual timelines
 
 ## Installation
 
-### Method 1: Direct Use
+1. Clone the repository:
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/code-historian.git
-
-# Optional: Copy example configuration to your project
-cp code-historian/tools/code-historian/examples/ha-component ./code-historian
-chmod +x code-historian
-```
-
-### Method 2: Global Installation
-```bash
-# Clone and install
 git clone https://github.com/yourusername/code-historian.git
 cd code-historian
+```
+
+2. Run the installation script:
+```bash
 ./install.sh
-
-# Now available everywhere as 'code-historian'
-code-historian --help
 ```
 
-## Core Dependencies
+The installer will:
+- Check for required dependencies (Python 3, pip, Graphviz)
+- Install necessary Python packages
+- Set up the command-line tool
 
-### Required Extensions
-- **VSCode Local History**: Creates timestamped backups of file changes
-  - Provides the `.history` directory structure
-  - Maintains chronological file versions
-  - Independent of git commits
+### Dependencies
 
-### Optional Integration
-- **Cursor AI**: While not required, Code Historian was developed with AI assistance
-  - Can enhance change categorization
-  - Helps in pattern recognition
-  - Useful for automated improvement suggestions
+- Python 3.6+
+- Graphviz
+- Python graphviz package (installed automatically)
 
-### System Requirements
-- Bash shell environment
-- Core Unix tools:
-  - `find`: For file discovery
-  - `diff`: For change comparison
-  - `grep`: For pattern matching
-  - `date`: For timestamp processing
-
-## Features in Detail
-
-### 1. Change Timeline Generation
-```markdown
-### Changes at 2024-12-18 14:05:11
-Categories: [Type Safety] [Error Handling] [Documentation]
-
-```diff
-@@ -83,6 +83,8 @@
-     self._device_init_delay = 2  # seconds
-     self._add_entities_callback: Optional[AddEntitiesCallback] = None
-     self._entity_cleanup_callbacks: Dict[str, Callable] = {}
-+    self._last_error_time = 0.0  # Initialize error time tracking
-+    self._error_cooldown = 60.0  # 60 second cooldown between error handling
-```
-- Added error rate limiting
-- Enhanced type safety with Optional and Dict types
-```
-
-### 2. Smart Change Categorization
-- **Class Structure**: Class definitions, inheritance changes
-- **Async Methods**: Asynchronous patterns, coroutines
-- **Logging**: Debugging, monitoring, metrics
-- **Error Handling**: Exception management, recovery
-- **Properties**: Data access patterns
-- **Type Safety**: Type hints, validation
-- **Resource Management**: Cleanup, memory management
-- **Documentation**: Inline docs, comments
-
-### 3. Impact Analysis
-- Tracks related changes across files
-- Identifies potential breaking changes
-- Highlights dependency modifications
-- Shows test coverage impact
-
-## Example Output
-
-### Change Analysis
-```markdown
-## Key Improvements in coordinator.py
-
-1. Type Safety Enhancements
-   - Added TypedDict for structured data
-   - Implemented Optional for nullable fields
-   - Enhanced function signatures
-
-2. Error Handling Improvements
-   - Added rate limiting for errors
-   - Implemented exponential backoff
-   - Enhanced recovery mechanisms
-
-3. Resource Management
-   - Improved process cleanup
-   - Added async shutdown handling
-   - Enhanced memory management
-```
-
-### Pattern Recognition
-```markdown
-Common Change Patterns:
-1. Error handling often follows logging improvements
-2. Type safety changes cluster with class structure updates
-3. Documentation updates correlate with API changes
-4. Resource management changes trigger test updates
-```
-
-## Usage Examples
-
-### Basic Analysis
+For Ubuntu/Debian:
 ```bash
-code-historian --files model,view,controller
+sudo apt-get update
+sudo apt-get install python3 python3-pip graphviz
 ```
 
-### Custom Directories
+For Fedora:
 ```bash
-code-historian --history-dir .vscode/history --source-dir app --output-dir reports
+sudo dnf install python3 python3-pip graphviz
 ```
 
-### Project-Specific Analysis
+For macOS:
 ```bash
-# Using project configuration
-./code-historian
-
-# Or with custom parameters
-./code-historian --files "coordinator,sensor,const" --output-dir "docs/changes"
+brew install python3 graphviz
 ```
 
-## Integration with Development Workflow
+## Usage
 
-### 1. Code Review Support
-- Generate change reports before reviews
-- Track evolution of complex features
-- Document architectural decisions
+### Basic Usage
 
-### 2. Documentation Generation
-- Automatic changelog creation
-- API evolution tracking
-- Breaking change detection
+Analyze specific files:
+```bash
+code-historian --files myfile,otherfile --ext py
+```
 
-### 3. Knowledge Management
-- Preserve context across team changes
-- Track feature development history
-- Document bug fixes and solutions
+Analyze files with pattern matching:
+```bash
+code-historian --recursive --pattern "*.py"
+```
 
-## Configuration
+Generate visual timelines:
+```bash
+code-historian --files myfile --ext py --timeline
+```
 
-### Global Configuration
-The global configuration file is located at `~/.config/code-historian/config.sh` and contains default settings for all projects.
+### Command Line Options
 
-### Project Configuration
-Create a `code-historian` script in your project root to customize:
-- Files to analyze
-- Output directories
-- Custom categories
-- Project-specific patterns
+```
+Options:
+  -h, --help                Show this help message
+  --history-dir DIR         Set history directory (default: .history)
+  --source-dir DIR          Set source directory (default: src)
+  --output-dir DIR          Set output directory (default: docs/history)
+  --files FILE1,FILE2,...   Specify files to analyze (without extension)
+  --ext EXTENSION           File extension to analyze (e.g., py, js, cpp)
+  --recursive               Recursively search in subdirectories
+  --pattern PATTERN         File pattern to match (e.g., '*.py', 'test_*.js')
+  --timeline               Generate visual timeline using Graphviz
+```
 
-Example configurations are available in the `examples/` directory.
+### Example Workflow
 
-## Future Enhancements
+1. Track changes in Python files:
+```bash
+code-historian --recursive --pattern "*.py" --timeline
+```
 
-### Immediate Goals
-1. Git integration for hybrid history
-2. Change impact scoring system
-3. Regression detection algorithms
-4. Code quality metrics tracking
+2. Analyze specific components:
+```bash
+code-historian --files coordinator,sensor --ext py --timeline
+```
 
-### Long-term Vision
-5. Visual timeline generation
-6. AI-powered improvement suggestions
-7. Multi-language support
-8. Custom category definitions
-9. Interactive analysis mode
-10. Advanced filtering and search
+3. View results:
+- Check `docs/history/SUMMARY.md` for an overview
+- Browse individual change reports in `docs/history/`
+- View visual timelines in PNG format
+
+## Output Format
+
+The tool generates:
+1. A markdown file for each analyzed file with:
+   - Detailed change history
+   - Git-style diffs
+   - Change statistics
+   - Categorized changes
+2. Visual timeline (when `--timeline` is used) showing:
+   - Change sequence
+   - Top categories per change
+   - Lines added/removed
+3. A summary markdown file linking to all reports and timelines
 
 ## Contributing
 
-Code Historian welcomes contributions! Areas of interest:
-1. Additional change categories
-2. Language-specific enhancements
-3. Integration with CI/CD
-4. Visualization improvements
-5. AI/ML integration for pattern detection
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License - Feel free to use, modify, and share!
+This project is licensed under the MIT License - see the LICENSE file for details.
