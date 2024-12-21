@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>io.codehistorian.intellij</id>
     <name>Code Historian</name>
-    <vendor email="support@codehistorian.io" url="https://codehistorian.io">Code Historian</vendor>
+    <vendor email="abcdqfr@users.noreply.github.com">Code Historian</vendor>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>

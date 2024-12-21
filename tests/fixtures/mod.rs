@@ -25,7 +25,7 @@ impl TestRepository {
         let repo = Repository::init(temp_dir.path()).unwrap();
         
         // Create initial commit
-        let signature = Signature::now("Test User", "test@example.com").unwrap();
+        let signature = Signature::now("abcdqfr", "abcdqfr@users.noreply.github.com").unwrap();
         let tree_id = {
             let mut index = repo.index().unwrap();
             index.write_tree().unwrap()
@@ -55,7 +55,7 @@ impl TestRepository {
         index.add_path(Path::new(name)).unwrap();
         index.write().unwrap();
         
-        let signature = Signature::now("Test User", "test@example.com").unwrap();
+        let signature = Signature::now("abcdqfr", "abcdqfr@users.noreply.github.com").unwrap();
         let tree_id = index.write_tree().unwrap();
         let tree = self.repo.find_tree(tree_id).unwrap();
         let parent = self.repo.head().unwrap().peel_to_commit().unwrap();
@@ -78,7 +78,7 @@ impl TestRepository {
         index.add_path(Path::new(name)).unwrap();
         index.write().unwrap();
         
-        let signature = Signature::now("Test User", "test@example.com").unwrap();
+        let signature = Signature::now("abcdqfr", "abcdqfr@users.noreply.github.com").unwrap();
         let tree_id = index.write_tree().unwrap();
         let tree = self.repo.find_tree(tree_id).unwrap();
         let parent = self.repo.head().unwrap().peel_to_commit().unwrap();

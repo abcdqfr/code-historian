@@ -2,7 +2,7 @@
 name = "code-historian"
 version = "0.1.0"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["abcdqfr <abcdqfr@users.noreply.github.com>"]
 description = "A tool for analyzing code evolution in software projects"
 license = "MIT"
 

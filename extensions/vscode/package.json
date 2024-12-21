@@ -63,13 +63,13 @@
             "properties": {
                 "codeHistorian.serverUrl": {
                     "type": "string",
-                    "default": "http://localhost:8080",
-                    "description": "Code Historian server URL"
+                    "default": "http://localhost:3000",
+                    "description": "Local server URL (defaults to localhost, change only for enterprise deployments)"
                 },
                 "codeHistorian.apiKey": {
                     "type": "string",
-                    "default": "",
-                    "description": "API key for authentication"
+                    "description": "API key for enterprise deployments (not required for local usage)",
+                    "scope": "application"
                 },
                 "codeHistorian.enableNotifications": {
                     "type": "boolean",

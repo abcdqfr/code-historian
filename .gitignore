@@ -3,117 +3,93 @@
 .vscode/
 *.swp
 *.swo
-*~
-.project
-.classpath
-.settings/
-*.sublime-workspace
-*.sublime-project
-
-# Build Directories
-target/
-dist/
-out/
-build/
-bin/
-obj/
-node_modules/
-.next/
-.nuxt/
-.output/
-
-# Dependency Directories
-vendor/
-.gradle/
-.m2/
-.ivy2/
-.cargo/
-.npm/
-.yarn/
-
-# Compiled Files
-*.class
-*.o
-*.pyc
-*.pyo
-__pycache__/
-*.so
-*.dylib
-*.dll
-*.exe
-
-# Package Files
-*.jar
-*.war
-*.ear
-*.zip
-*.tar.gz
-*.rar
-*.7z
-
-# Logs and Databases
-*.log
-*.sqlite
-*.db
-*.db-shm
-*.db-wal
-logs/
-log/
-
-# Environment and Configuration
-.env
-.env.local
-.env.*.local
-config.local.js
-*.local.json
 .DS_Store
 Thumbs.db
 
-# Testing and Coverage
-coverage/
-.coverage
-.pytest_cache/
-.tox/
-htmlcov/
-.nyc_output/
-
-# Generated Documentation
-docs/_build/
-docs/_site/
-site/
-public/
-dist/
-
-# Cache and Temporary Files
-.cache/
-.temp/
-.tmp/
-*.bak
-*.tmp
-*.temp
-
-# VS Code Extension Specific
-extensions/vscode/out/
-extensions/vscode/.vscode-test/
-extensions/vscode/dist/
-extensions/vscode/node_modules/
-
-# IntelliJ Plugin Specific
-extensions/intellij/build/
-extensions/intellij/.gradle/
-extensions/intellij/out/
-
-# Eclipse Plugin Specific
-extensions/eclipse/bin/
-extensions/eclipse/target/
-
-# Rust Specific
-debug/
-target/
+# Rust
+/target/
+**/target/
 **/*.rs.bk
 Cargo.lock
+*.pdb
 
-# Project Specific
-.historian-cache/
-.analysis-cache/
-.metrics-cache/
+# VS Code Extension
+.vscode/
+*.vsix
+*.code-workspace
+.history/
+dist/
+out/
+
+# IntelliJ Plugin
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+build/
+
+# Eclipse Plugin
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+.project
+.classpath
+*.jar
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+coverage/
+.nyc_output/
+
+# Build and Output
+dist/
+build/
+out/
+target/
+*.class
+*.o
+*.so
+*.dylib
+*.dll
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Project specific
+*.log
+.env
+.env.local
+.env.*.local
+config.local.toml
+*.local.rs
+*.local.properties
+
+# Documentation
+docs/_site/
+docs/.jekyll-cache/
+docs/.sass-cache/
+
+# Test artifacts
+*.test
+*.spec
+__pycache__/
+.pytest_cache/
+.coverage

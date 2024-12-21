@@ -15,7 +15,7 @@ Every plugin must provide a manifest in `plugin.toml`:
 name = "my-analyzer"
 version = "0.1.0"
 description = "My custom code analyzer"
-author = "Your Name <your.email@example.com>"
+author = "Your Name <abcdqfr@users.noreply.github.com>"
 
 [dependencies]
 # Optional dependencies on other plugins

@@ -64,7 +64,7 @@ graph TD
 ### Building from Source
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/code-historian.git
+git clone https://github.com/abcdqfr/code-historian.git
 cd code-historian
 
 # Build the project

@@ -14,16 +14,22 @@ import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 
 public class HistorianService {
-    private static final String API_URL = "http://localhost:8080/api";
+    // Default to localhost for local-first architecture
+    // For enterprise deployments, this can be configured to a self-hosted server
+    private static final String DEFAULT_API_URL = "http://localhost:3000/api";
+    private final String apiUrl;
     private final HttpClient client;
     private final Gson gson;
 
-    public HistorianService() {
+    public HistorianService(String apiUrl) {
+        this.apiUrl = apiUrl != null ? apiUrl : DEFAULT_API_URL;
         this.client = HttpClient.newHttpClient();
         this.gson = new Gson();
     }
 
     public void startAnalysis(IProject project, String apiKey) {
+        // API key is only used in enterprise deployments for team features
+        // Local installations do not require authentication
         Job job = new Job("Code Historian Analysis") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
@@ -31,10 +37,16 @@ public class HistorianService {
                     String projectPath = project.getLocation().toOSString();
                     String requestBody = gson.toJson(new AnalysisRequest(projectPath));
 
-                    HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(API_URL + "/analysis/start"))
-                        .header("Content-Type", "application/json")
-                        .header("X-API-Key", apiKey)
+                    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                        .uri(URI.create(apiUrl + "/analysis/start"))
+                        .header("Content-Type", "application/json");
+
+                    // Only add API key if provided
+                    if (apiKey != null && !apiKey.trim().isEmpty()) {
+                        requestBuilder.header("X-API-Key", apiKey);
+                    }
+
+                    HttpRequest request = requestBuilder
                         .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                         .build();
 
