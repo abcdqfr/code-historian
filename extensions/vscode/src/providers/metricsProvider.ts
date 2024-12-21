@@ -1,12 +1,31 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
+
+class MetricItem extends vscode.TreeItem {
+    constructor(
+        public readonly label: string,
+        public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+        public readonly description?: string,
+        public readonly command?: vscode.Command
+    ) {
+        super(label, collapsibleState);
+        this.description = description;
+        this.command = command;
+        this.iconPath = {
+            light: vscode.Uri.file(path.join(__dirname, '..', '..', 'resources', 'light', 'metric.svg')),
+            dark: vscode.Uri.file(path.join(__dirname, '..', '..', 'resources', 'dark', 'metric.svg'))
+        };
+    }
+}
 
 export class MetricsProvider implements vscode.TreeDataProvider<MetricItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<MetricItem | undefined | null | void> = new vscode.EventEmitter<MetricItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<MetricItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-    constructor() {}
+    constructor() {
+        this.refresh();
+    }
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
@@ -18,144 +37,68 @@ export class MetricsProvider implements vscode.TreeDataProvider<MetricItem> {
 
     async getChildren(element?: MetricItem): Promise<MetricItem[]> {
         if (!element) {
-            return this.getRootMetrics();
+            return this.getRootItems();
         }
         return this.getMetricDetails(element);
     }
 
-    private async getRootMetrics(): Promise<MetricItem[]> {
+    private async getRootItems(): Promise<MetricItem[]> {
         try {
             const config = vscode.workspace.getConfiguration('codeHistorian');
             const serverUrl = config.get<string>('serverUrl');
             const apiKey = config.get<string>('apiKey');
 
             if (!serverUrl || !apiKey) {
-                return [new MetricItem('Configuration Required', 'Configure server URL and API key in settings', vscode.TreeItemCollapsibleState.None)];
+                throw new Error('Server URL and API key must be configured');
             }
 
-            const response = await axios.get(`${serverUrl}/api/metrics/summary`, {
-                headers: {
-                    'X-API-Key': apiKey
-                }
-            });
+            const response = await axios.get<{ metrics: Array<{ name: string; value: number; hasDetails?: boolean }> }>(
+                `${serverUrl}/api/metrics/summary`,
+                { headers: { 'X-API-Key': apiKey } }
+            );
 
-            return [
+            return response.data.metrics.map(metric => 
                 new MetricItem(
-                    'Code Churn',
-                    'Changes over time',
-                    vscode.TreeItemCollapsibleState.Collapsed,
-                    {
-                        value: response.data.codeChurn,
-                        trend: response.data.codeChurnTrend
-                    }
-                ),
-                new MetricItem(
-                    'Team Collaboration',
-                    'Team metrics',
-                    vscode.TreeItemCollapsibleState.Collapsed,
-                    {
-                        value: response.data.teamScore,
-                        trend: response.data.teamScoreTrend
-                    }
-                ),
-                new MetricItem(
-                    'Impact Analysis',
-                    'Code impact metrics',
-                    vscode.TreeItemCollapsibleState.Collapsed,
-                    {
-                        value: response.data.impactScore,
-                        trend: response.data.impactScoreTrend
-                    }
-                ),
-                new MetricItem(
-                    'Custom Metrics',
-                    'User-defined metrics',
-                    vscode.TreeItemCollapsibleState.Collapsed
-                )
-            ];
-
-        } catch (error) {
-            return [new MetricItem('Error', error.message, vscode.TreeItemCollapsibleState.None)];
-        }
-    }
-
-    private async getMetricDetails(metric: MetricItem): Promise<MetricItem[]> {
-        try {
-            const config = vscode.workspace.getConfiguration('codeHistorian');
-            const serverUrl = config.get<string>('serverUrl');
-            const apiKey = config.get<string>('apiKey');
-
-            if (!serverUrl || !apiKey) {
-                return [];
-            }
-
-            const response = await axios.get(`${serverUrl}/api/metrics/details/${metric.label}`, {
-                headers: {
-                    'X-API-Key': apiKey
-                }
-            });
-
-            return Object.entries(response.data).map(([key, value]: [string, any]) => 
-                new MetricItem(
-                    key,
-                    value.toString(),
-                    vscode.TreeItemCollapsibleState.None,
-                    {
-                        value: value,
-                        trend: value.trend
-                    }
+                    metric.name,
+                    metric.hasDetails ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+                    `${metric.value}`
                 )
             );
 
         } catch (error) {
-            return [new MetricItem('Error', error.message, vscode.TreeItemCollapsibleState.None)];
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            vscode.window.showErrorMessage(`Failed to load metrics data: ${errorMessage}`);
+            return [];
         }
     }
-}
 
-interface MetricData {
-    value?: number;
-    trend?: 'up' | 'down' | 'stable';
-}
+    private async getMetricDetails(element: MetricItem): Promise<MetricItem[]> {
+        try {
+            const config = vscode.workspace.getConfiguration('codeHistorian');
+            const serverUrl = config.get<string>('serverUrl');
+            const apiKey = config.get<string>('apiKey');
 
-class MetricItem extends vscode.TreeItem {
-    constructor(
-        public readonly label: string,
-        private description: string,
-        public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-        private metricData?: MetricData
-    ) {
-        super(label, collapsibleState);
-        this.tooltip = `${description}\n${this.getMetricDetails()}`;
-        this.description = this.getDescription();
+            if (!serverUrl || !apiKey) {
+                throw new Error('Server URL and API key must be configured');
+            }
+
+            const response = await axios.get<{ details: Array<{ name: string; value: string | number }> }>(
+                `${serverUrl}/api/metrics/details/${encodeURIComponent(element.label)}`,
+                { headers: { 'X-API-Key': apiKey } }
+            );
+
+            return response.data.details.map(detail => 
+                new MetricItem(
+                    detail.name,
+                    vscode.TreeItemCollapsibleState.None,
+                    `${detail.value}`
+                )
+            );
+
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            vscode.window.showErrorMessage(`Failed to load metric details: ${errorMessage}`);
+            return [];
+        }
     }
-
-    private getMetricDetails(): string {
-        if (!this.metricData) {
-            return '';
-        }
-
-        const parts = [];
-        if (this.metricData.value !== undefined) {
-            parts.push(`Value: ${this.metricData.value}`);
-        }
-        if (this.metricData.trend) {
-            parts.push(`Trend: ${this.metricData.trend}`);
-        }
-        return parts.join('\n');
-    }
-
-    private getDescription(): string {
-        if (!this.metricData || this.metricData.value === undefined) {
-            return this.description;
-        }
-        return `${this.description} (${this.metricData.value})`;
-    }
-
-    iconPath = {
-        light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'metric.svg'),
-        dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'metric.svg')
-    };
-
-    contextValue = 'metricItem';
 } 
