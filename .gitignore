@@ -86,6 +86,19 @@ config.local.toml
 docs/_site/
 docs/.jekyll-cache/
 docs/.sass-cache/
+site/
+.cache/
+.docusaurus
+.next
+.nuxt
+.vuepress/dist
+*.old
+*.bak
+*.old.*
+*.bak.*
+*.tmp.*
+*.archive
+*.archive.*
 
 # Test artifacts
 *.test
@@ -93,8 +106,131 @@ docs/.sass-cache/
 __pycache__/
 .pytest_cache/
 .coverage
+coverage/
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
 
 # Gradle
 .gradle/
 *.lock
 gradle-wrapper.properties
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# MkDocs
+site/
+docs/_build/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm
+.yarn
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.bak
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+.env.local
+.env.*.local
+
+# Testing
+.coverage
+coverage/
+htmlcov/
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Build
+target/
+out/
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Documentation
+site/
+.cache/
+.docusaurus
+.next
+.nuxt
+.vuepress/dist
+
+# Rust
+debug/
+target/
+**/*.rs.bk
+Cargo.lock
+
+# VS Code Extension
+.vscode-test/
+*.vsix
+
+# Project specific
+.code-historian/
+.history/
+temp/
+tmp/
+old/
+archive/
+backup/
+*.old
+*.bak
+*.tmp
+*.archive
+*.backup

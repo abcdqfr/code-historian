@@ -1,59 +1,48 @@
 {
     "name": "code-historian",
     "displayName": "Code Historian",
-    "description": "Advanced code history analysis and visualization",
+    "description": "A VS Code extension for analyzing code history and metrics",
     "version": "1.0.0",
-    "publisher": "code-historian",
     "engines": {
-        "vscode": "^1.75.0"
+        "vscode": "^1.85.0"
     },
     "categories": [
-        "Other",
-        "Visualization",
-        "Programming Languages"
+        "Other"
     ],
+    "activationEvents": [],
     "main": "./dist/extension.js",
     "contributes": {
         "commands": [
             {
-                "command": "codeHistorian.startAnalysis",
-                "title": "Start Analysis",
-                "category": "Code Historian"
-            },
-            {
                 "command": "codeHistorian.showDashboard",
-                "title": "Show Dashboard",
-                "category": "Code Historian"
+                "title": "Show Code Historian Dashboard"
             },
             {
-                "command": "codeHistorian.showHistory",
-                "title": "Show File History",
-                "category": "Code Historian"
+                "command": "codeHistorian.refreshMetrics",
+                "title": "Refresh Metrics"
             },
             {
-                "command": "codeHistorian.fixTypeScriptErrors",
-                "title": "Fix TypeScript Errors",
-                "category": "Code Historian"
+                "command": "codeHistorian.refreshAnalysis",
+                "title": "Refresh Analysis"
+            },
+            {
+                "command": "codeHistorian.refreshTeam",
+                "title": "Refresh Team"
             }
         ],
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "code-historian",
-                    "title": "Code Historian",
-                    "icon": "resources/icon.svg"
-                }
-            ]
-        },
         "views": {
-            "code-historian": [
-                {
-                    "id": "codeHistorianExplorer",
-                    "name": "Explorer"
-                },
+            "explorer": [
                 {
                     "id": "codeHistorianMetrics",
-                    "name": "Metrics"
+                    "name": "Code Metrics"
+                },
+                {
+                    "id": "codeHistorianAnalysis",
+                    "name": "Code Analysis"
+                },
+                {
+                    "id": "codeHistorianTeam",
+                    "name": "Team Insights"
                 }
             ]
         },
@@ -63,42 +52,13 @@
                 "codeHistorian.serverUrl": {
                     "type": "string",
                     "default": "http://localhost:3000",
-                    "description": "Local server URL (defaults to localhost, change only for enterprise deployments)"
+                    "description": "URL of the Code Historian server"
                 },
                 "codeHistorian.apiKey": {
                     "type": "string",
-                    "description": "API key for enterprise deployments (not required for local usage)",
-                    "scope": "application"
-                },
-                "codeHistorian.enableNotifications": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enable notifications"
-                },
-                "codeHistorian.maxHistoryDepth": {
-                    "type": "number",
-                    "default": 100,
-                    "description": "Maximum history depth for analysis"
-                },
-                "codeHistorian.autoFixTypeScriptErrors": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Automatically fix TypeScript errors when possible"
+                    "description": "API key for the Code Historian server"
                 }
             }
-        },
-        "menus": {
-            "editor/context": [
-                {
-                    "command": "codeHistorian.showHistory",
-                    "group": "navigation"
-                },
-                {
-                    "command": "codeHistorian.fixTypeScriptErrors",
-                    "group": "1_modification",
-                    "when": "resourceLangId == typescript"
-                }
-            ]
         }
     },
     "scripts": {
@@ -106,34 +66,32 @@
         "compile": "webpack",
         "watch": "webpack --watch",
         "package": "webpack --mode production --devtool hidden-source-map",
-        "test-compile": "tsc -p ./",
-        "test-watch": "tsc -watch -p ./",
-        "pretest": "npm run test-compile && npm run lint",
+        "compile-tests": "tsc -p ./",
+        "watch-tests": "tsc -p ./ -w",
+        "pretest": "npm run compile && npm run lint",
         "lint": "eslint src --ext ts",
         "test": "node ./out/test/runTest.js"
     },
     "devDependencies": {
         "@types/glob": "^8.1.0",
-        "@types/mocha": "^10.0.1",
-        "@types/node": "^16.18.34",
-        "@types/vscode": "^1.75.0",
-        "@types/ws": "^8.5.4",
-        "@typescript-eslint/eslint-plugin": "^5.59.8",
-        "@typescript-eslint/parser": "^5.59.8",
-        "@vscode/test-electron": "^2.3.2",
-        "eslint": "^8.41.0",
-        "glob": "^8.1.0",
+        "@types/mocha": "^10.0.6",
+        "@types/node": "^20.10.5",
+        "@types/sinon": "^17.0.2",
+        "@types/vscode": "^1.85.0",
+        "@typescript-eslint/eslint-plugin": "^6.15.0",
+        "@typescript-eslint/parser": "^6.15.0",
+        "@vscode/test-electron": "^2.3.8",
+        "eslint": "^8.56.0",
+        "glob": "^10.3.10",
         "mocha": "^10.2.0",
-        "ts-loader": "^9.4.3",
-        "typescript": "^5.1.3",
-        "webpack": "^5.85.0",
-        "webpack-cli": "^5.1.1"
+        "sinon": "^17.0.1",
+        "ts-loader": "^9.5.1",
+        "typescript": "^5.3.3",
+        "webpack": "^5.89.0",
+        "webpack-cli": "^5.1.4"
     },
     "dependencies": {
-        "axios": "^1.4.0",
-        "ws": "^8.13.0",
-        "chart.js": "^4.3.0",
-        "dayjs": "^1.11.8",
-        "isomorphic-ws": "^5.0.0"
+        "axios": "^1.6.2",
+        "chart.js": "^4.4.1"
     }
-} 
+}

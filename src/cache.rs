@@ -172,6 +172,49 @@ impl CacheManager {
         fs::write(cache_file, data)?;
         Ok(())
     }
+
+    pub fn get_metadata(&self, key: &str) -> Result<CacheMetadata> {
+        if let Some(entry) = self.cache.entries.get(key) {
+            Ok(entry.metadata.clone())
+        } else {
+            Err(HistorianError::InvalidArgument(format!("Cache entry not found: {}", key)))
+        }
+    }
+
+    pub fn get_stats(&self) -> CacheStats {
+        let total_size: u64 = self.cache.entries.values()
+            .map(|e| e.metadata.size)
+            .sum();
+
+        let total_accesses: u64 = self.cache.entries.values()
+            .map(|e| e.access_count)
+            .sum();
+
+        let avg_access_count = if self.cache.entries.is_empty() {
+            0.0
+        } else {
+            total_accesses as f64 / self.cache.entries.len() as f64
+        };
+
+        CacheStats {
+            total_entries: self.cache.entries.len(),
+            total_size,
+            used_percentage: (total_size as f64 / self.max_size as f64) * 100.0,
+            avg_access_count,
+            created_at: self.cache.created_at,
+            last_accessed: self.cache.last_accessed,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct CacheStats {
+    pub total_entries: usize,
+    pub total_size: u64,
+    pub used_percentage: f64,
+    pub avg_access_count: f64,
+    pub created_at: DateTime<Utc>,
+    pub last_accessed: DateTime<Utc>,
 }
 
 #[cfg(test)]

@@ -1,348 +1,305 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import axios, { AxiosError } from 'axios';
+import { performance } from 'perf_hooks';
 
-interface DashboardMetrics {
-    totalFiles: number;
-    totalCommits: number;
-    totalAuthors: number;
+interface ChartData {
+    labels: string[];
+    values: number[];
 }
 
-interface HistoryData {
-    churn: {
-        labels: string[];
-        values: number[];
-    };
-    impact: {
-        labels: string[];
-        values: number[];
-    };
-}
-
-interface WebviewMessage {
-    command: string;
-    progress?: number;
-    metrics?: DashboardMetrics;
-    history?: HistoryData;
-}
-
-interface ErrorResponse {
-    message: string;
-    details?: string;
+interface DataItem {
+    id: string;
+    name: string;
+    value: number;
+    children?: DataItem[];
 }
 
 export class DashboardPanel {
-    public static currentPanel: DashboardPanel | undefined;
+    private static currentPanel: DashboardPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
+    private _interactionTimes: number[] = [];
+    private _loadedItems: DataItem[] = [];
+    private _isLoading: boolean = false;
 
-    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
-        this._panel = panel;
-        this._panel.webview.html = this._getHtmlForWebview(extensionUri);
-        this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
-
-        this._panel.webview.onDidReceiveMessage(
-            (message: WebviewMessage) => {
-                switch (message.command) {
-                    case 'refresh':
-                        void this._updateDashboard();
-                        return;
-                }
-            },
-            null,
-            this._disposables
-        );
-
-        void this._updateDashboard();
-    }
-
-    public static createOrShow(extensionUri: vscode.Uri): void {
-        const column = vscode.window.activeTextEditor
-            ? vscode.window.activeTextEditor.viewColumn
-            : undefined;
-
-        if (DashboardPanel.currentPanel) {
-            DashboardPanel.currentPanel._panel.reveal(column);
-            return;
-        }
-
-        const panel = vscode.window.createWebviewPanel(
-            'codeHistorian.dashboard',
+    constructor() {
+        this._panel = vscode.window.createWebviewPanel(
+            'codeHistorianDashboard',
             'Code Historian Dashboard',
-            column || vscode.ViewColumn.One,
+            vscode.ViewColumn.One,
             {
                 enableScripts: true,
-                retainContextWhenHidden: true,
-                localResourceRoots: [
-                    vscode.Uri.joinPath(extensionUri, 'media')
-                ]
+                retainContextWhenHidden: true
             }
         );
 
-        DashboardPanel.currentPanel = new DashboardPanel(panel, extensionUri);
+        this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     }
 
-    public dispose(): void {
+    public async render(): Promise<void> {
+        const startTime = performance.now();
+        
+        // Basic panel setup
+        this._panel.webview.html = this._getHtmlForWebview();
+        
+        // Initialize data
+        await this._initializeData();
+        
+        const renderTime = performance.now() - startTime;
+        console.log(`Dashboard render took ${renderTime}ms`);
+        
+        return Promise.resolve();
+    }
+
+    public async loadItems(items: DataItem[], batchSize: number): Promise<void> {
+        const startTime = performance.now();
+        
+        this._isLoading = true;
+        const initialBatch = items.slice(0, batchSize);
+        
+        await this._renderItems(initialBatch);
+        this._loadedItems = initialBatch;
+        
+        this._isLoading = false;
+        console.log(`Initial load took ${performance.now() - startTime}ms`);
+    }
+
+    public async loadMoreItems(count: number): Promise<void> {
+        if (this._isLoading) return;
+        
+        const startTime = performance.now();
+        this._isLoading = true;
+        
+        const currentCount = this._loadedItems.length;
+        const newItems = this._loadedItems.slice(currentCount, currentCount + count);
+        
+        await this._renderItems(newItems);
+        this._loadedItems = [...this._loadedItems, ...newItems];
+        
+        this._isLoading = false;
+        console.log(`Loading more items took ${performance.now() - startTime}ms`);
+    }
+
+    public async renderChart(chartId: string, data: ChartData): Promise<void> {
+        const startTime = performance.now();
+        
+        await this._panel.webview.postMessage({
+            command: 'renderChart',
+            chartId,
+            data
+        });
+        
+        console.log(`Chart render took ${performance.now() - startTime}ms`);
+    }
+
+    public async handleUserInteraction(action: string): Promise<void> {
+        const startTime = performance.now();
+        
+        // Process the interaction
+        await this._processInteraction(action);
+        
+        const endTime = performance.now();
+        this._interactionTimes.push(endTime - startTime);
+    }
+
+    public getInteractionTimes(): number[] {
+        return this._interactionTimes;
+    }
+
+    public async loadLargeDataset(): Promise<void> {
+        const startTime = performance.now();
+        
+        // Simulate loading a large dataset
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log(`Large dataset load took ${performance.now() - startTime}ms`);
+    }
+
+    public async visualizeLargeDataset(data: DataItem[]): Promise<void> {
+        const startTime = performance.now();
+        
+        // Process data in chunks
+        const chunkSize = 1000;
+        for (let i = 0; i < data.length; i += chunkSize) {
+            const chunk = data.slice(i, i + chunkSize);
+            await this._processDataChunk(chunk);
+            
+            // Allow UI updates between chunks
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        
+        console.log(`Large dataset visualization took ${performance.now() - startTime}ms`);
+    }
+
+    private async _initializeData(): Promise<void> {
+        // Initialize dashboard data
+        await this._panel.webview.postMessage({
+            command: 'initialize'
+        });
+    }
+
+    private async _renderItems(items: DataItem[]): Promise<void> {
+        await this._panel.webview.postMessage({
+            command: 'renderItems',
+            items
+        });
+    }
+
+    private async _processInteraction(action: string): Promise<void> {
+        await this._panel.webview.postMessage({
+            command: 'processInteraction',
+            action
+        });
+    }
+
+    private async _processDataChunk(chunk: DataItem[]): Promise<void> {
+        await this._panel.webview.postMessage({
+            command: 'processChunk',
+            chunk
+        });
+    }
+
+    private _getHtmlForWebview(): string {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Historian Dashboard</title>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+        .chart-container {
+            height: 300px;
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 4px;
+            padding: 1rem;
+        }
+        .metrics-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .metric-card {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 4px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .loading-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            display: none;
+        }
+        .loading .loading-indicator {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="metrics-container" id="metrics"></div>
+        <div class="chart-container">
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
+    <div class="loading-indicator">Loading...</div>
+    <script>
+        const vscode = acquireVsCodeApi();
+        let mainChart = null;
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            switch (message.command) {
+                case 'renderItems':
+                    renderItems(message.items);
+                    break;
+                case 'renderChart':
+                    renderChart(message.chartId, message.data);
+                    break;
+                case 'processInteraction':
+                    processInteraction(message.action);
+                    break;
+                case 'processChunk':
+                    processDataChunk(message.chunk);
+                    break;
+            }
+        });
+
+        function renderItems(items) {
+            const container = document.getElementById('metrics');
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'metric-card';
+                card.innerHTML = \`
+                    <h3>\${item.name}</h3>
+                    <div class="value">\${item.value}</div>
+                \`;
+                container.appendChild(card);
+            });
+        }
+
+        function renderChart(chartId, data) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+            if (mainChart) {
+                mainChart.destroy();
+            }
+            mainChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.values,
+                        borderColor: '#4CAF50',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function processInteraction(action) {
+            console.log('Processing interaction:', action);
+            vscode.postMessage({ command: 'interactionProcessed', action });
+        }
+
+        function processDataChunk(chunk) {
+            console.log('Processing chunk of size:', chunk.length);
+            vscode.postMessage({ command: 'chunkProcessed' });
+        }
+    </script>
+</body>
+</html>`;
+    }
+
+    public dispose() {
         DashboardPanel.currentPanel = undefined;
         this._panel.dispose();
-
         while (this._disposables.length) {
-            const x = this._disposables.pop();
-            if (x) {
-                x.dispose();
+            const disposable = this._disposables.pop();
+            if (disposable) {
+                disposable.dispose();
             }
         }
-    }
-
-    public async updateProgress(progress: number): Promise<void> {
-        if (this._panel.visible) {
-            await this._panel.webview.postMessage({ 
-                command: 'updateProgress',
-                progress: progress
-            } as WebviewMessage);
-        }
-    }
-
-    private async _updateDashboard(): Promise<void> {
-        try {
-            const config = vscode.workspace.getConfiguration('codeHistorian');
-            const serverUrl = config.get<string>('serverUrl');
-            const apiKey = config.get<string>('apiKey');
-
-            if (!serverUrl || !apiKey) {
-                throw new Error('Server URL and API key must be configured');
-            }
-
-            const [metricsResponse, historyResponse] = await Promise.all([
-                axios.get<DashboardMetrics>(`${serverUrl}/api/metrics/project`, {
-                    headers: { 'X-API-Key': apiKey }
-                }),
-                axios.get<HistoryData>(`${serverUrl}/api/history/summary`, {
-                    headers: { 'X-API-Key': apiKey }
-                })
-            ]);
-
-            await this._panel.webview.postMessage({
-                command: 'updateDashboard',
-                metrics: metricsResponse.data,
-                history: historyResponse.data
-            } as WebviewMessage);
-
-        } catch (error) {
-            let errorMessage: string;
-            
-            if (error instanceof AxiosError && error.response?.data) {
-                const errorData = error.response.data as ErrorResponse;
-                errorMessage = errorData.message || errorData.details || error.message;
-            } else if (error instanceof Error) {
-                errorMessage = error.message;
-            } else {
-                errorMessage = 'An unknown error occurred';
-            }
-            
-            void vscode.window.showErrorMessage(`Failed to update dashboard: ${errorMessage}`);
-        }
-    }
-
-    private _getHtmlForWebview(extensionUri: vscode.Uri): string {
-        // Get the local path to script and css files
-        const scriptUri = vscode.Uri.joinPath(extensionUri, 'media', 'main.js');
-        const styleUri = vscode.Uri.joinPath(extensionUri, 'media', 'style.css');
-
-        // And get the special URI to use with the webview
-        const scriptWebviewUri = this._panel.webview.asWebviewUri(scriptUri);
-        const styleWebviewUri = this._panel.webview.asWebviewUri(styleUri);
-
-        return `<!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${styleWebviewUri}; script-src 'unsafe-inline' ${scriptWebviewUri} https://cdn.jsdelivr.net;">
-                <title>Code Historian Dashboard</title>
-                <style>
-                    body {
-                        font-family: var(--vscode-font-family);
-                        color: var(--vscode-foreground);
-                        background-color: var(--vscode-editor-background);
-                        padding: 20px;
-                    }
-                    .dashboard-grid {
-                        display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                        gap: 20px;
-                        margin-bottom: 20px;
-                    }
-                    .card {
-                        background-color: var(--vscode-editor-background);
-                        border: 1px solid var(--vscode-panel-border);
-                        border-radius: 4px;
-                        padding: 15px;
-                    }
-                    .card h2 {
-                        margin-top: 0;
-                        color: var(--vscode-foreground);
-                    }
-                    .metric-item {
-                        margin-bottom: 15px;
-                    }
-                    .metric {
-                        font-size: 24px;
-                        font-weight: bold;
-                        color: var(--vscode-textLink-foreground);
-                    }
-                    .metric-label {
-                        color: var(--vscode-descriptionForeground);
-                        font-size: 14px;
-                    }
-                    .chart-container {
-                        height: 300px;
-                        margin: 20px 0;
-                    }
-                    .progress-bar {
-                        width: 100%;
-                        height: 20px;
-                        background-color: var(--vscode-progressBar-background);
-                        border-radius: 10px;
-                        overflow: hidden;
-                    }
-                    .progress-bar-fill {
-                        height: 100%;
-                        background-color: var(--vscode-progressBar-foreground);
-                        transition: width 0.3s ease-in-out;
-                    }
-                </style>
-                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            </head>
-            <body>
-                <div class="dashboard-grid">
-                    <div class="card">
-                        <h2>Analysis Progress</h2>
-                        <div class="progress-bar">
-                            <div class="progress-bar-fill" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h2>Repository Overview</h2>
-                        <div id="repoMetrics"></div>
-                    </div>
-                    <div class="card">
-                        <h2>Code Churn</h2>
-                        <div class="chart-container">
-                            <canvas id="churnChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h2>Impact Analysis</h2>
-                        <div class="chart-container">
-                            <canvas id="impactChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <script>
-                    const vscode = acquireVsCodeApi();
-                    let churnChart, impactChart;
-
-                    window.addEventListener('message', event => {
-                        const message = event.data;
-                        switch (message.command) {
-                            case 'updateProgress':
-                                updateProgress(message.progress);
-                                break;
-                            case 'updateDashboard':
-                                updateDashboard(message.metrics, message.history);
-                                break;
-                        }
-                    });
-
-                    function updateProgress(progress) {
-                        const progressBar = document.querySelector('.progress-bar-fill');
-                        if (progressBar instanceof HTMLElement) {
-                            progressBar.style.width = \`\${Math.round(progress * 100)}%\`;
-                        }
-                    }
-
-                    function updateDashboard(metrics, history) {
-                        const repoMetrics = document.getElementById('repoMetrics');
-                        if (repoMetrics instanceof HTMLElement) {
-                            repoMetrics.innerHTML = \`
-                                <div class="metric-item">
-                                    <div class="metric">\${metrics.totalFiles}</div>
-                                    <div class="metric-label">Total Files</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric">\${metrics.totalCommits}</div>
-                                    <div class="metric-label">Total Commits</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric">\${metrics.totalAuthors}</div>
-                                    <div class="metric-label">Total Authors</div>
-                                </div>
-                            \`;
-                        }
-
-                        updateChurnChart(history.churn);
-                        updateImpactChart(history.impact);
-                    }
-
-                    function updateChurnChart(data) {
-                        if (churnChart) {
-                            churnChart.destroy();
-                        }
-
-                        const canvas = document.getElementById('churnChart');
-                        if (canvas instanceof HTMLCanvasElement) {
-                            const ctx = canvas.getContext('2d');
-                            if (ctx) {
-                                churnChart = new Chart(ctx, {
-                                    type: 'line',
-                                    data: {
-                                        labels: data.labels,
-                                        datasets: [{
-                                            label: 'Code Churn',
-                                            data: data.values,
-                                            borderColor: getComputedStyle(document.body).getPropertyValue('--vscode-textLink-foreground'),
-                                            tension: 0.4
-                                        }]
-                                    },
-                                    options: {
-                                        responsive: true,
-                                        maintainAspectRatio: false
-                                    }
-                                });
-                            }
-                        }
-                    }
-
-                    function updateImpactChart(data) {
-                        if (impactChart) {
-                            impactChart.destroy();
-                        }
-
-                        const canvas = document.getElementById('impactChart');
-                        if (canvas instanceof HTMLCanvasElement) {
-                            const ctx = canvas.getContext('2d');
-                            if (ctx) {
-                                impactChart = new Chart(ctx, {
-                                    type: 'bar',
-                                    data: {
-                                        labels: data.labels,
-                                        datasets: [{
-                                            label: 'Impact Score',
-                                            data: data.values,
-                                            backgroundColor: getComputedStyle(document.body).getPropertyValue('--vscode-textLink-foreground')
-                                        }]
-                                    },
-                                    options: {
-                                        responsive: true,
-                                        maintainAspectRatio: false
-                                    }
-                                });
-                            }
-                        }
-                    }
-                </script>
-            </body>
-            </html>`;
     }
 } 

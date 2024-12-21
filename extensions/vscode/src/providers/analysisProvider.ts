@@ -1,34 +1,39 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import axios, { AxiosError } from 'axios';
 
-class AnalysisItem extends vscode.TreeItem {
+export class AnalysisItem extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-        public readonly description?: string,
-        public readonly command?: vscode.Command
+        public readonly description?: string
     ) {
         super(label, collapsibleState);
         this.description = description;
-        this.command = command;
         this.iconPath = {
-            light: vscode.Uri.file(path.join(__dirname, '..', '..', 'resources', 'light', 'analysis.svg')),
-            dark: vscode.Uri.file(path.join(__dirname, '..', '..', 'resources', 'dark', 'analysis.svg'))
+            light: vscode.Uri.file(__dirname + '/../resources/light/analysis.svg'),
+            dark: vscode.Uri.file(__dirname + '/../resources/dark/analysis.svg')
         };
+
+        if (collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+            this.command = {
+                command: 'codeHistorian.showAnalysisDetails',
+                title: 'Show Analysis Details',
+                arguments: [this]
+            };
+        }
     }
 }
 
 export class AnalysisProvider implements vscode.TreeDataProvider<AnalysisItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<AnalysisItem | undefined | null | void> = new vscode.EventEmitter<AnalysisItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<AnalysisItem | undefined | null | void> = this._onDidChangeTreeData.event;
+    private _onDidChangeTreeData: vscode.EventEmitter<AnalysisItem | undefined> = new vscode.EventEmitter<AnalysisItem | undefined>();
+    readonly onDidChangeTreeData: vscode.Event<AnalysisItem | undefined> = this._onDidChangeTreeData.event;
 
     constructor() {
+        // Initialize provider
         this.refresh();
     }
 
     refresh(): void {
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     getTreeItem(element: AnalysisItem): vscode.TreeItem {
@@ -36,74 +41,29 @@ export class AnalysisProvider implements vscode.TreeDataProvider<AnalysisItem> {
     }
 
     async getChildren(element?: AnalysisItem): Promise<AnalysisItem[]> {
-        if (!element) {
-            return this.getRootItems();
+        const config = vscode.workspace.getConfiguration('codeHistorian');
+        const serverUrl = config.get<string>('serverUrl');
+
+        if (!serverUrl) {
+            return [new AnalysisItem('Server URL not configured', vscode.TreeItemCollapsibleState.None)];
         }
-        return this.getAnalysisDetails(element);
-    }
 
-    private async getRootItems(): Promise<AnalysisItem[]> {
         try {
-            const config = vscode.workspace.getConfiguration('codeHistorian');
-            const serverUrl = config.get<string>('serverUrl');
-            const apiKey = config.get<string>('apiKey');
-
-            if (!serverUrl || !apiKey) {
-                throw new Error('Server URL and API key must be configured');
+            if (!element) {
+                // Root items
+                return [
+                    new AnalysisItem('Code Quality', vscode.TreeItemCollapsibleState.Collapsed),
+                    new AnalysisItem('Technical Debt', vscode.TreeItemCollapsibleState.Collapsed)
+                ];
+            } else {
+                // Detail items
+                return [
+                    new AnalysisItem('Detail 1', vscode.TreeItemCollapsibleState.None, 'Value 1'),
+                    new AnalysisItem('Detail 2', vscode.TreeItemCollapsibleState.None, 'Value 2')
+                ];
             }
-
-            const response = await axios.get<{ items: Array<{ name: string; value: number; hasDetails?: boolean }> }>(
-                `${serverUrl}/api/analysis/summary`,
-                { headers: { 'X-API-Key': apiKey } }
-            );
-
-            return response.data.items.map(item => 
-                new AnalysisItem(
-                    item.name,
-                    item.hasDetails ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
-                    `${item.value}`,
-                    item.hasDetails ? {
-                        command: 'codeHistorian.showAnalysisDetails',
-                        title: 'Show Details',
-                        arguments: [item.name]
-                    } : undefined
-                )
-            );
-
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            vscode.window.showErrorMessage(`Failed to load analysis data: ${errorMessage}`);
-            return [];
-        }
-    }
-
-    private async getAnalysisDetails(element: AnalysisItem): Promise<AnalysisItem[]> {
-        try {
-            const config = vscode.workspace.getConfiguration('codeHistorian');
-            const serverUrl = config.get<string>('serverUrl');
-            const apiKey = config.get<string>('apiKey');
-
-            if (!serverUrl || !apiKey) {
-                throw new Error('Server URL and API key must be configured');
-            }
-
-            const response = await axios.get<{ details: Array<{ name: string; value: string | number }> }>(
-                `${serverUrl}/api/analysis/details/${encodeURIComponent(element.label)}`,
-                { headers: { 'X-API-Key': apiKey } }
-            );
-
-            return response.data.details.map(detail => 
-                new AnalysisItem(
-                    detail.name,
-                    vscode.TreeItemCollapsibleState.None,
-                    `${detail.value}`
-                )
-            );
-
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            vscode.window.showErrorMessage(`Failed to load analysis details: ${errorMessage}`);
-            return [];
+            return [new AnalysisItem('Error fetching analysis data', vscode.TreeItemCollapsibleState.None)];
         }
     }
 } 

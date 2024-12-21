@@ -1,21 +1,24 @@
 const path = require('path');
 
 module.exports = {
-  mode: 'development',
   target: 'node',
+  mode: 'none',
   entry: './src/extension.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'extension.js',
-    libraryTarget: 'commonjs2',
-    devtoolModuleFilenameTemplate: '../[resource-path]'
+    libraryTarget: 'commonjs2'
   },
-  devtool: 'source-map',
   externals: {
     vscode: 'commonjs vscode'
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
+    alias: {
+      'vscode': process.env.NODE_ENV === 'test' ? 
+        path.resolve(__dirname, 'src/test/suite/mock/vscode.ts') : 
+        'commonjs vscode'
+    }
   },
   module: {
     rules: [
@@ -29,5 +32,6 @@ module.exports = {
         ]
       }
     ]
-  }
+  },
+  devtool: 'nosources-source-map'
 }; 

@@ -154,7 +154,7 @@ Compare multiple projects or branches:
 ## Support
 
 - GitHub Issues: [code-historian/vscode-extension/issues](https://github.com/code-historian/vscode-extension/issues)
-- Documentation: [code-historian.io/docs/vscode](https://code-historian.io/docs/vscode)
+- Documentation: [GitHub Repository](https://github.com/abcdqfr/code-historian/docs/vscode)
 - Community: [Discord](https://discord.gg/code-historian)
 
 ## Contributing

@@ -45,7 +45,7 @@ tasks {
             - Visualizing development patterns
             - Supporting team collaboration
             
-            For more information, visit: https://codehistorian.io
+            For more information, visit: https://github.com/abcdqfr/code-historian
         """.trimIndent())
         
         changeNotes.set("""

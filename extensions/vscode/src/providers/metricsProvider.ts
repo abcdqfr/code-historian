@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
-class MetricItem extends vscode.TreeItem {
+export class MetricItem extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
@@ -54,7 +54,7 @@ export class MetricsProvider implements vscode.TreeDataProvider<MetricItem> {
 
             const response = await axios.get<{ metrics: Array<{ name: string; value: number; hasDetails?: boolean }> }>(
                 `${serverUrl}/api/metrics/summary`,
-                { headers: { 'X-API-Key': apiKey } }
+                { headers: { xApiKey: apiKey } }
             );
 
             return response.data.metrics.map(metric => 
@@ -84,7 +84,7 @@ export class MetricsProvider implements vscode.TreeDataProvider<MetricItem> {
 
             const response = await axios.get<{ details: Array<{ name: string; value: string | number }> }>(
                 `${serverUrl}/api/metrics/details/${encodeURIComponent(element.label)}`,
-                { headers: { 'X-API-Key': apiKey } }
+                { headers: { xApiKey: apiKey } }
             );
 
             return response.data.details.map(detail => 
