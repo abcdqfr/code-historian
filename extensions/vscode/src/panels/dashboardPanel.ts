@@ -1,6 +1,35 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
+
+interface DashboardMetrics {
+    totalFiles: number;
+    totalCommits: number;
+    totalAuthors: number;
+}
+
+interface HistoryData {
+    churn: {
+        labels: string[];
+        values: number[];
+    };
+    impact: {
+        labels: string[];
+        values: number[];
+    };
+}
+
+interface WebviewMessage {
+    command: string;
+    progress?: number;
+    metrics?: DashboardMetrics;
+    history?: HistoryData;
+}
+
+interface ErrorResponse {
+    message: string;
+    details?: string;
+}
 
 export class DashboardPanel {
     public static currentPanel: DashboardPanel | undefined;
@@ -9,20 +38,14 @@ export class DashboardPanel {
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
         this._panel = panel;
-
-        // Set the webview's initial html content
-        this._panel.webview.html = this._getHtmlForWebview();
-
-        // Listen for when the panel is disposed
-        // This happens when the user closes the panel or when the panel is closed programmatically
+        this._panel.webview.html = this._getHtmlForWebview(extensionUri);
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
-        // Handle messages from the webview
         this._panel.webview.onDidReceiveMessage(
-            message => {
+            (message: WebviewMessage) => {
                 switch (message.command) {
                     case 'refresh':
-                        this._updateDashboard();
+                        void this._updateDashboard();
                         return;
                 }
             },
@@ -30,22 +53,19 @@ export class DashboardPanel {
             this._disposables
         );
 
-        // Initial update
-        this._updateDashboard();
+        void this._updateDashboard();
     }
 
-    public static createOrShow(extensionUri: vscode.Uri) {
+    public static createOrShow(extensionUri: vscode.Uri): void {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
 
-        // If we already have a panel, show it
         if (DashboardPanel.currentPanel) {
             DashboardPanel.currentPanel._panel.reveal(column);
             return;
         }
 
-        // Otherwise, create a new panel
         const panel = vscode.window.createWebviewPanel(
             'codeHistorian.dashboard',
             'Code Historian Dashboard',
@@ -62,10 +82,8 @@ export class DashboardPanel {
         DashboardPanel.currentPanel = new DashboardPanel(panel, extensionUri);
     }
 
-    public dispose() {
+    public dispose(): void {
         DashboardPanel.currentPanel = undefined;
-
-        // Clean up our resources
         this._panel.dispose();
 
         while (this._disposables.length) {
@@ -76,16 +94,16 @@ export class DashboardPanel {
         }
     }
 
-    public async updateProgress(progress: number) {
+    public async updateProgress(progress: number): Promise<void> {
         if (this._panel.visible) {
             await this._panel.webview.postMessage({ 
                 command: 'updateProgress',
                 progress: progress
-            });
+            } as WebviewMessage);
         }
     }
 
-    private async _updateDashboard() {
+    private async _updateDashboard(): Promise<void> {
         try {
             const config = vscode.workspace.getConfiguration('codeHistorian');
             const serverUrl = config.get<string>('serverUrl');
@@ -96,10 +114,10 @@ export class DashboardPanel {
             }
 
             const [metricsResponse, historyResponse] = await Promise.all([
-                axios.get(`${serverUrl}/api/metrics/project`, {
+                axios.get<DashboardMetrics>(`${serverUrl}/api/metrics/project`, {
                     headers: { 'X-API-Key': apiKey }
                 }),
-                axios.get(`${serverUrl}/api/history/summary`, {
+                axios.get<HistoryData>(`${serverUrl}/api/history/summary`, {
                     headers: { 'X-API-Key': apiKey }
                 })
             ]);
@@ -108,20 +126,39 @@ export class DashboardPanel {
                 command: 'updateDashboard',
                 metrics: metricsResponse.data,
                 history: historyResponse.data
-            });
+            } as WebviewMessage);
 
         } catch (error) {
-            vscode.window.showErrorMessage(`Failed to update dashboard: ${error.message}`);
+            let errorMessage: string;
+            
+            if (error instanceof AxiosError && error.response?.data) {
+                const errorData = error.response.data as ErrorResponse;
+                errorMessage = errorData.message || errorData.details || error.message;
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            } else {
+                errorMessage = 'An unknown error occurred';
+            }
+            
+            void vscode.window.showErrorMessage(`Failed to update dashboard: ${errorMessage}`);
         }
     }
 
-    private _getHtmlForWebview() {
-        return `
-            <!DOCTYPE html>
+    private _getHtmlForWebview(extensionUri: vscode.Uri): string {
+        // Get the local path to script and css files
+        const scriptUri = vscode.Uri.joinPath(extensionUri, 'media', 'main.js');
+        const styleUri = vscode.Uri.joinPath(extensionUri, 'media', 'style.css');
+
+        // And get the special URI to use with the webview
+        const scriptWebviewUri = this._panel.webview.asWebviewUri(scriptUri);
+        const styleWebviewUri = this._panel.webview.asWebviewUri(styleUri);
+
+        return `<!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${styleWebviewUri}; script-src 'unsafe-inline' ${scriptWebviewUri} https://cdn.jsdelivr.net;">
                 <title>Code Historian Dashboard</title>
                 <style>
                     body {
@@ -146,10 +183,17 @@ export class DashboardPanel {
                         margin-top: 0;
                         color: var(--vscode-foreground);
                     }
+                    .metric-item {
+                        margin-bottom: 15px;
+                    }
                     .metric {
                         font-size: 24px;
                         font-weight: bold;
                         color: var(--vscode-textLink-foreground);
+                    }
+                    .metric-label {
+                        color: var(--vscode-descriptionForeground);
+                        font-size: 14px;
                     }
                     .chart-container {
                         height: 300px;
@@ -213,21 +257,30 @@ export class DashboardPanel {
 
                     function updateProgress(progress) {
                         const progressBar = document.querySelector('.progress-bar-fill');
-                        progressBar.style.width = `${progress * 100}%`;
+                        if (progressBar instanceof HTMLElement) {
+                            progressBar.style.width = \`\${Math.round(progress * 100)}%\`;
+                        }
                     }
 
                     function updateDashboard(metrics, history) {
-                        // Update repository metrics
-                        document.getElementById('repoMetrics').innerHTML = `
-                            <div class="metric">${metrics.totalFiles}</div>
-                            <div>Total Files</div>
-                            <div class="metric">${metrics.totalCommits}</div>
-                            <div>Total Commits</div>
-                            <div class="metric">${metrics.totalAuthors}</div>
-                            <div>Total Authors</div>
-                        `;
+                        const repoMetrics = document.getElementById('repoMetrics');
+                        if (repoMetrics instanceof HTMLElement) {
+                            repoMetrics.innerHTML = \`
+                                <div class="metric-item">
+                                    <div class="metric">\${metrics.totalFiles}</div>
+                                    <div class="metric-label">Total Files</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric">\${metrics.totalCommits}</div>
+                                    <div class="metric-label">Total Commits</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric">\${metrics.totalAuthors}</div>
+                                    <div class="metric-label">Total Authors</div>
+                                </div>
+                            \`;
+                        }
 
-                        // Update charts
                         updateChurnChart(history.churn);
                         updateImpactChart(history.impact);
                     }
@@ -237,23 +290,28 @@ export class DashboardPanel {
                             churnChart.destroy();
                         }
 
-                        const ctx = document.getElementById('churnChart').getContext('2d');
-                        churnChart = new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: data.labels,
-                                datasets: [{
-                                    label: 'Code Churn',
-                                    data: data.values,
-                                    borderColor: getComputedStyle(document.body).getPropertyValue('--vscode-textLink-foreground'),
-                                    tension: 0.4
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false
+                        const canvas = document.getElementById('churnChart');
+                        if (canvas instanceof HTMLCanvasElement) {
+                            const ctx = canvas.getContext('2d');
+                            if (ctx) {
+                                churnChart = new Chart(ctx, {
+                                    type: 'line',
+                                    data: {
+                                        labels: data.labels,
+                                        datasets: [{
+                                            label: 'Code Churn',
+                                            data: data.values,
+                                            borderColor: getComputedStyle(document.body).getPropertyValue('--vscode-textLink-foreground'),
+                                            tension: 0.4
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false
+                                    }
+                                });
                             }
-                        });
+                        }
                     }
 
                     function updateImpactChart(data) {
@@ -261,26 +319,30 @@ export class DashboardPanel {
                             impactChart.destroy();
                         }
 
-                        const ctx = document.getElementById('impactChart').getContext('2d');
-                        impactChart = new Chart(ctx, {
-                            type: 'bar',
-                            data: {
-                                labels: data.labels,
-                                datasets: [{
-                                    label: 'Impact Score',
-                                    data: data.values,
-                                    backgroundColor: getComputedStyle(document.body).getPropertyValue('--vscode-textLink-foreground')
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false
+                        const canvas = document.getElementById('impactChart');
+                        if (canvas instanceof HTMLCanvasElement) {
+                            const ctx = canvas.getContext('2d');
+                            if (ctx) {
+                                impactChart = new Chart(ctx, {
+                                    type: 'bar',
+                                    data: {
+                                        labels: data.labels,
+                                        datasets: [{
+                                            label: 'Impact Score',
+                                            data: data.values,
+                                            backgroundColor: getComputedStyle(document.body).getPropertyValue('--vscode-textLink-foreground')
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false
+                                    }
+                                });
                             }
-                        });
+                        }
                     }
                 </script>
             </body>
-            </html>
-        `;
+            </html>`;
     }
 } 

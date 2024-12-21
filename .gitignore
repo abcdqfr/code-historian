@@ -93,3 +93,8 @@ docs/.sass-cache/
 __pycache__/
 .pytest_cache/
 .coverage
+
+# Gradle
+.gradle/
+*.lock
+gradle-wrapper.properties

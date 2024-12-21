@@ -5,18 +5,12 @@
     "version": "1.0.0",
     "publisher": "code-historian",
     "engines": {
-        "vscode": "^1.60.0"
+        "vscode": "^1.75.0"
     },
     "categories": [
         "Other",
         "Visualization",
         "Programming Languages"
-    ],
-    "activationEvents": [
-        "onCommand:codeHistorian.startAnalysis",
-        "onCommand:codeHistorian.showDashboard",
-        "onCommand:codeHistorian.showHistory",
-        "onView:codeHistorianExplorer"
     ],
     "main": "./dist/extension.js",
     "contributes": {
@@ -34,6 +28,11 @@
             {
                 "command": "codeHistorian.showHistory",
                 "title": "Show File History",
+                "category": "Code Historian"
+            },
+            {
+                "command": "codeHistorian.fixTypeScriptErrors",
+                "title": "Fix TypeScript Errors",
                 "category": "Code Historian"
             }
         ],
@@ -80,6 +79,11 @@
                     "type": "number",
                     "default": 100,
                     "description": "Maximum history depth for analysis"
+                },
+                "codeHistorian.autoFixTypeScriptErrors": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Automatically fix TypeScript errors when possible"
                 }
             }
         },
@@ -88,6 +92,11 @@
                 {
                     "command": "codeHistorian.showHistory",
                     "group": "navigation"
+                },
+                {
+                    "command": "codeHistorian.fixTypeScriptErrors",
+                    "group": "1_modification",
+                    "when": "resourceLangId == typescript"
                 }
             ]
         }
@@ -107,7 +116,7 @@
         "@types/glob": "^8.1.0",
         "@types/mocha": "^10.0.1",
         "@types/node": "^16.18.34",
-        "@types/vscode": "^1.60.0",
+        "@types/vscode": "^1.75.0",
         "@types/ws": "^8.5.4",
         "@typescript-eslint/eslint-plugin": "^5.59.8",
         "@typescript-eslint/parser": "^5.59.8",

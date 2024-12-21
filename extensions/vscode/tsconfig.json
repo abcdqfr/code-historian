@@ -2,11 +2,9 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "ES2020",
-        "outDir": "out",
+        "outDir": "dist",
         "lib": [
-            "ES2020",
-            "DOM",
-            "DOM.Iterable"
+            "ES2020"
         ],
         "sourceMap": true,
         "rootDir": "src",
@@ -16,13 +14,7 @@
         "noUnusedParameters": true,
         "noImplicitAny": true,
         "noImplicitThis": true,
-        "noUnusedLocals": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "resolveJsonModule": true,
-        "typeRoots": [
-            "./node_modules/@types"
-        ]
+        "esModuleInterop": true
     },
     "exclude": [
         "node_modules",

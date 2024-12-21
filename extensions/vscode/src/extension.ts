@@ -1,151 +1,100 @@
 import * as vscode from 'vscode';
-import { AnalysisProvider } from './providers/analysisProvider';
-import { MetricsProvider } from './providers/metricsProvider';
 import { DashboardPanel } from './panels/dashboardPanel';
-import { WebSocketClient } from './utils/websocket';
-import axios from 'axios';
+import { ErrorMonitor } from './utils/errorMonitor';
+import { ErrorFixer } from './utils/errorFixer';
+import * as ts from 'typescript';
 
-let dashboardPanel: DashboardPanel | undefined;
-let webSocketClient: WebSocketClient | undefined;
-
-export async function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext) {
     console.log('Code Historian extension is now active');
 
-    // Initialize providers
-    const analysisProvider = new AnalysisProvider();
-    const metricsProvider = new MetricsProvider();
+    // Initialize error monitoring system
+    const errorMonitor = ErrorMonitor.getInstance();
+    const errorFixer = ErrorFixer.getInstance();
 
-    // Register tree view providers
-    vscode.window.registerTreeDataProvider('codeHistorianExplorer', analysisProvider);
-    vscode.window.registerTreeDataProvider('codeHistorianMetrics', metricsProvider);
+    // Register auto-fix command
+    let disposable = vscode.commands.registerCommand('codeHistorian.fixTypeScriptErrors', async () => {
+        await errorFixer.fixAllErrors();
+    });
+    context.subscriptions.push(disposable);
 
-    // Register commands
-    let startAnalysis = vscode.commands.registerCommand('codeHistorian.startAnalysis', async () => {
-        try {
-            const config = vscode.workspace.getConfiguration('codeHistorian');
-            const serverUrl = config.get<string>('serverUrl');
-            const apiKey = config.get<string>('apiKey');
+    // Register dashboard command
+    disposable = vscode.commands.registerCommand('codeHistorian.showDashboard', () => {
+        DashboardPanel.createOrShow(context.extensionUri);
+    });
+    context.subscriptions.push(disposable);
 
-            if (!serverUrl || !apiKey) {
-                throw new Error('Server URL and API key must be configured');
-            }
-
-            const workspaceFolders = vscode.workspace.workspaceFolders;
-            if (!workspaceFolders) {
-                throw new Error('No workspace folder is open');
-            }
-
-            const response = await axios.post(`${serverUrl}/api/analysis/start`, {
-                projectPath: workspaceFolders[0].uri.fsPath
-            }, {
-                headers: {
-                    'X-API-Key': apiKey
-                }
+    // Register analysis command
+    disposable = vscode.commands.registerCommand('codeHistorian.startAnalysis', async () => {
+        const progress = await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "Analyzing repository...",
+            cancellable: true
+        }, async (progress, token) => {
+            token.onCancellationRequested(() => {
+                console.log("User canceled the analysis");
             });
 
-            // Connect WebSocket for real-time updates
-            webSocketClient = new WebSocketClient(
-                `${serverUrl.replace('http', 'ws')}/ws/analysis/${response.data.id}`,
-                (progress: number) => {
-                    vscode.window.setStatusBarMessage(`Analysis Progress: ${Math.round(progress * 100)}%`);
-                    if (dashboardPanel) {
-                        dashboardPanel.updateProgress(progress);
+            progress.report({ increment: 0 });
+
+            try {
+                // Simulate analysis progress
+                for (let i = 0; i < 100; i += 10) {
+                    if (token.isCancellationRequested) {
+                        break;
                     }
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    progress.report({ increment: 10, message: `${i + 10}% complete` });
                 }
-            );
 
-            vscode.window.showInformationMessage('Code history analysis started');
-
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to start analysis: ${error.message}`);
-        }
-    });
-
-    let showDashboard = vscode.commands.registerCommand('codeHistorian.showDashboard', () => {
-        if (dashboardPanel) {
-            dashboardPanel.reveal();
-        } else {
-            dashboardPanel = new DashboardPanel(context.extensionUri);
-        }
-    });
-
-    let showHistory = vscode.commands.registerCommand('codeHistorian.showHistory', async (uri: vscode.Uri) => {
-        try {
-            const config = vscode.workspace.getConfiguration('codeHistorian');
-            const serverUrl = config.get<string>('serverUrl');
-            const apiKey = config.get<string>('apiKey');
-
-            if (!serverUrl || !apiKey) {
-                throw new Error('Server URL and API key must be configured');
+                if (!token.isCancellationRequested) {
+                    vscode.window.showInformationMessage('Analysis complete!');
+                    DashboardPanel.createOrShow(context.extensionUri);
+                }
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                vscode.window.showErrorMessage(`Analysis failed: ${errorMessage}`);
             }
+        });
+    });
+    context.subscriptions.push(disposable);
 
-            const response = await axios.get(`${serverUrl}/api/history/file`, {
-                params: {
-                    path: uri.fsPath
-                },
-                headers: {
-                    'X-API-Key': apiKey
-                }
-            });
+    // Watch for TypeScript errors
+    const watcher = vscode.workspace.createFileSystemWatcher('**/*.ts');
+    context.subscriptions.push(watcher);
 
-            // Create and show history panel
-            const panel = vscode.window.createWebviewPanel(
-                'codeHistorian.history',
-                'File History',
-                vscode.ViewColumn.Two,
-                {
-                    enableScripts: true
-                }
-            );
+    // Auto-fix setting
+    const config = vscode.workspace.getConfiguration('codeHistorian');
+    const autoFix = config.get<boolean>('autoFixTypeScriptErrors');
 
-            panel.webview.html = getHistoryHtml(response.data);
+    watcher.onDidChange(async uri => {
+        const document = await vscode.workspace.openTextDocument(uri);
+        const diagnostics = vscode.languages.getDiagnostics(uri);
+        
+        // Clear old errors
+        errorMonitor.clearErrors(uri.fsPath);
 
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to load file history: ${error.message}`);
+        // Track new errors
+        for (const diagnostic of diagnostics) {
+            if (diagnostic.severity === vscode.DiagnosticSeverity.Error) {
+                errorMonitor.trackError({
+                    file: uri.fsPath,
+                    line: diagnostic.range.start.line + 1,
+                    character: diagnostic.range.start.character,
+                    message: diagnostic.message,
+                    code: diagnostic.code as number,
+                    category: ts.DiagnosticCategory.Error,
+                    start: diagnostic.range.start.character,
+                    length: diagnostic.range.end.character - diagnostic.range.start.character,
+                    messageText: diagnostic.message
+                });
+            }
+        }
+
+        // Auto-fix if enabled
+        if (autoFix) {
+            await errorFixer.fixAllErrors();
         }
     });
-
-    context.subscriptions.push(startAnalysis, showDashboard, showHistory);
 }
 
-export function deactivate() {
-    if (webSocketClient) {
-        webSocketClient.disconnect();
-    }
-}
-
-function getHistoryHtml(history: any): string {
-    return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>File History</title>
-            <style>
-                body { font-family: var(--vscode-font-family); }
-                .history-item {
-                    margin: 10px 0;
-                    padding: 10px;
-                    border: 1px solid var(--vscode-panel-border);
-                }
-                .timestamp { color: var(--vscode-descriptionForeground); }
-                .author { font-weight: bold; }
-                .impact { float: right; }
-            </style>
-        </head>
-        <body>
-            <div id="history">
-                ${history.changes.map((change: any) => `
-                    <div class="history-item">
-                        <div class="timestamp">${change.timestamp}</div>
-                        <div class="author">${change.author}</div>
-                        <div class="message">${change.message}</div>
-                        <div class="impact">Impact: ${Math.round(change.impactScore * 100)}%</div>
-                    </div>
-                `).join('')}
-            </div>
-        </body>
-        </html>
-    `;
-} 
+export function deactivate() {} 
