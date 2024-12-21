@@ -21,6 +21,22 @@ export class DashboardPanel {
     private _loadedItems: DataItem[] = [];
     private _isLoading: boolean = false;
 
+    public static createOrShow(extensionUri: vscode.Uri): DashboardPanel {
+        const column = vscode.window.activeTextEditor
+            ? vscode.window.activeTextEditor.viewColumn
+            : undefined;
+
+        // If we already have a panel, show it
+        if (DashboardPanel.currentPanel) {
+            DashboardPanel.currentPanel._panel.reveal(column);
+            return DashboardPanel.currentPanel;
+        }
+
+        // Otherwise, create a new panel
+        DashboardPanel.currentPanel = new DashboardPanel();
+        return DashboardPanel.currentPanel;
+    }
+
     constructor() {
         this._panel = vscode.window.createWebviewPanel(
             'codeHistorianDashboard',
@@ -112,6 +128,17 @@ export class DashboardPanel {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         console.log(`Large dataset load took ${performance.now() - startTime}ms`);
+    }
+
+    public async showAnalysisDetails(itemName: string): Promise<void> {
+        const startTime = performance.now();
+        
+        await this._panel.webview.postMessage({
+            command: 'showAnalysisDetails',
+            itemName
+        });
+        
+        console.log(`Analysis details render took ${performance.now() - startTime}ms`);
     }
 
     public async visualizeLargeDataset(data: DataItem[]): Promise<void> {
@@ -292,13 +319,16 @@ export class DashboardPanel {
 </html>`;
     }
 
-    public dispose() {
+    private dispose() {
         DashboardPanel.currentPanel = undefined;
+
+        // Clean up our resources
         this._panel.dispose();
+
         while (this._disposables.length) {
-            const disposable = this._disposables.pop();
-            if (disposable) {
-                disposable.dispose();
+            const x = this._disposables.pop();
+            if (x) {
+                x.dispose();
             }
         }
     }
