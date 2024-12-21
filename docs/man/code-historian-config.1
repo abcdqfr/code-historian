@@ -1,0 +1,146 @@
+.TH CODE-HISTORIAN-CONFIG 1 "2024" "Code Historian" "User Commands"
+.SH NAME
+code-historian-config \- manage Code Historian configuration
+.SH SYNOPSIS
+.B code-historian config
+\fICOMMAND\fR [\fIOPTIONS\fR]
+.SH DESCRIPTION
+.B code-historian config
+manages configuration settings for Code Historian.
+It supports project-specific, user-specific, and system-wide configurations.
+.SH COMMANDS
+.TP
+.BR init
+Initialize configuration with default values
+.TP
+.BR get " " \fIKEY\fR
+Get value for specified configuration key
+.TP
+.BR set " " \fIKEY\fR " " \fIVALUE\fR
+Set value for specified configuration key
+.TP
+.BR list
+List all configuration settings
+.TP
+.BR edit
+Open configuration file in default editor
+.SH OPTIONS
+.TP
+.BR \-\-global
+Use global (user) configuration
+.TP
+.BR \-\-system
+Use system-wide configuration
+.TP
+.BR \-\-local
+Use local (project) configuration (default)
+.TP
+.BR \-\-file =\fIFILE\fR
+Use specific configuration file
+.SH CONFIGURATION KEYS
+.TP
+.B history.enabled
+Enable/disable history tracking (boolean)
+.TP
+.B history.directory
+Path to history directory (string)
+.TP
+.B output.directory
+Path to output directory (string)
+.TP
+.B output.format
+Default output format (string: markdown, json, html)
+.TP
+.B plugins.enabled
+List of enabled plugins (array of strings)
+.TP
+.B plugins.directory
+Path to plugins directory (string)
+.TP
+.B ml.enabled
+Enable/disable machine learning features (boolean)
+.TP
+.B ml.model
+Machine learning model to use (string)
+.TP
+.B cache.enabled
+Enable/disable caching (boolean)
+.TP
+.B cache.directory
+Path to cache directory (string)
+.SH CONFIGURATION FILES
+.TP
+.I .code-historian/config.toml
+Project-specific configuration
+.TP
+.I ~/.config/code-historian/config.toml
+User-specific configuration
+.TP
+.I /etc/code-historian/config.toml
+System-wide configuration
+.SH CONFIGURATION FORMAT
+Configuration files use TOML format:
+.PP
+.nf
+.RS
+[history]
+enabled = true
+directory = ".code-historian"
+
+[output]
+directory = "reports"
+format = "html"
+
+[plugins]
+enabled = ["complexity", "security"]
+directory = "plugins"
+
+[ml]
+enabled = true
+model = "code-bert-base"
+
+[cache]
+enabled = true
+directory = ".code-historian/cache"
+.RE
+.fi
+.SH EXAMPLES
+.TP
+Initialize configuration:
+.B code-historian config init
+.TP
+Get configuration value:
+.B code-historian config get output.format
+.TP
+Set configuration value:
+.B code-historian config set history.enabled true
+.TP
+List all settings:
+.B code-historian config list
+.TP
+Edit global configuration:
+.B code-historian config edit --global
+.SH ENVIRONMENT
+.TP
+.B CODE_HISTORIAN_CONFIG
+Override default configuration file
+.TP
+.B EDITOR
+Editor to use with 'config edit' command
+.SH EXIT STATUS
+.TP
+.BR 0
+Success
+.TP
+.BR 1
+Configuration error
+.TP
+.BR 2
+Invalid arguments
+.SH SEE ALSO
+.BR code-historian (1),
+.BR code-historian-analyze (1)
+.SH BUGS
+Report bugs at https://github.com/code-historian/code-historian/issues
+.SH AUTHOR
+Code Historian Team 

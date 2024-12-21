@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Code Historian"
+            id="io.codehistorian.eclipse">
+      </category>
+      <view
+            category="io.codehistorian.eclipse"
+            class="io.codehistorian.eclipse.views.DashboardView"
+            icon="icons/dashboard.png"
+            id="io.codehistorian.eclipse.views.DashboardView"
+            name="Code Historian Dashboard">
+      </view>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="io.codehistorian.eclipse.commands"
+            name="Code Historian">
+      </category>
+      <command
+            categoryId="io.codehistorian.eclipse.commands"
+            id="io.codehistorian.eclipse.commands.startAnalysis"
+            name="Start Analysis">
+      </command>
+      <command
+            categoryId="io.codehistorian.eclipse.commands"
+            id="io.codehistorian.eclipse.commands.showDashboard"
+            name="Show Dashboard">
+      </command>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="io.codehistorian.eclipse.handlers.StartAnalysisHandler"
+            commandId="io.codehistorian.eclipse.commands.startAnalysis">
+      </handler>
+      <handler
+            class="io.codehistorian.eclipse.handlers.ShowDashboardHandler"
+            commandId="io.codehistorian.eclipse.commands.showDashboard">
+      </handler>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="io.codehistorian.eclipse.toolbar">
+            <command
+                  commandId="io.codehistorian.eclipse.commands.startAnalysis"
+                  icon="icons/analyze.png"
+                  tooltip="Start Code Analysis">
+            </command>
+            <command
+                  commandId="io.codehistorian.eclipse.commands.showDashboard"
+                  icon="icons/dashboard.png"
+                  tooltip="Show Dashboard">
+            </command>
+         </toolbar>
+      </menuContribution>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="io.codehistorian.eclipse.preferences.HistorianPreferencePage"
+            id="io.codehistorian.eclipse.preferences.HistorianPreferencePage"
+            name="Code Historian">
+      </page>
+   </extension>
+</plugin> 

@@ -1,0 +1,105 @@
+{
+    "name": "code-historian-vscode",
+    "displayName": "Code Historian",
+    "description": "Real-time code evolution analysis and visualization",
+    "version": "0.1.0",
+    "publisher": "code-historian",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": [
+        "Other",
+        "Visualization",
+        "Programming Languages"
+    ],
+    "activationEvents": [
+        "onCommand:code-historian.analyze",
+        "onCommand:code-historian.showDashboard",
+        "onView:code-historian-sidebar"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "code-historian.analyze",
+                "title": "Analyze Repository",
+                "category": "Code Historian"
+            },
+            {
+                "command": "code-historian.showDashboard",
+                "title": "Show Dashboard",
+                "category": "Code Historian"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "code-historian-sidebar",
+                    "title": "Code Historian",
+                    "icon": "resources/icon.svg"
+                }
+            ]
+        },
+        "views": {
+            "code-historian-sidebar": [
+                {
+                    "id": "code-historian-analysis",
+                    "name": "Analysis"
+                },
+                {
+                    "id": "code-historian-metrics",
+                    "name": "Metrics"
+                },
+                {
+                    "id": "code-historian-team",
+                    "name": "Team"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "Code Historian",
+            "properties": {
+                "code-historian.serverUrl": {
+                    "type": "string",
+                    "default": "http://localhost:3000",
+                    "description": "URL of the Code Historian server"
+                },
+                "code-historian.autoAnalyze": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Automatically analyze repository on open"
+                },
+                "code-historian.refreshInterval": {
+                    "type": "number",
+                    "default": 30,
+                    "description": "Dashboard refresh interval in seconds"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.60.0",
+        "@types/glob": "^7.1.4",
+        "@types/mocha": "^9.0.0",
+        "@types/node": "14.x",
+        "@typescript-eslint/eslint-plugin": "^4.31.1",
+        "@typescript-eslint/parser": "^4.31.1",
+        "eslint": "^7.32.0",
+        "glob": "^7.1.7",
+        "mocha": "^9.1.1",
+        "typescript": "^4.4.3",
+        "@vscode/test-electron": "^1.6.2"
+    },
+    "dependencies": {
+        "axios": "^0.24.0",
+        "ws": "^8.2.3"
+    }
+} 

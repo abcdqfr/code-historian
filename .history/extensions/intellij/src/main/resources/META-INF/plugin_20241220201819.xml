@@ -1,0 +1,58 @@
+<idea-plugin>
+    <id>io.codehistorian.intellij</id>
+    <name>Code Historian</name>
+    <vendor email="support@codehistorian.io" url="https://codehistorian.io">Code Historian</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Tool Windows -->
+        <toolWindow id="Code Historian" secondary="true" icon="AllIcons.Toolwindows.ToolWindowStructure"
+                    anchor="right" factoryClass="io.codehistorian.intellij.window.HistorianToolWindowFactory"/>
+
+        <!-- Services -->
+        <applicationService serviceImplementation="io.codehistorian.intellij.service.HistorianSettingsService"/>
+        <applicationService serviceImplementation="io.codehistorian.intellij.service.HistorianApiService"/>
+        <projectService serviceImplementation="io.codehistorian.intellij.service.HistorianProjectService"/>
+
+        <!-- Settings -->
+        <applicationConfigurable parentId="tools" instance="io.codehistorian.intellij.settings.HistorianSettingsConfigurable"
+                               id="io.codehistorian.intellij.settings.HistorianSettingsConfigurable"
+                               displayName="Code Historian"/>
+
+        <!-- Notifications -->
+        <notificationGroup id="Code Historian" displayType="BALLOON"/>
+
+        <!-- Line Markers -->
+        <codeInsight.lineMarkerProvider language="JAVA"
+                                      implementationClass="io.codehistorian.intellij.markers.HistorianLineMarkerProvider"/>
+    </extensions>
+
+    <actions>
+        <!-- Main Actions -->
+        <group id="CodeHistorian.MainMenu" text="Code Historian" description="Code Historian plugin menu">
+            <add-to-group group-id="AnalyzeMenu" anchor="last"/>
+            <action id="CodeHistorian.Analyze" class="io.codehistorian.intellij.actions.AnalyzeAction"
+                    text="Analyze Repository" description="Start code history analysis">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl H"/>
+            </action>
+            <action id="CodeHistorian.ShowDashboard" class="io.codehistorian.intellij.actions.ShowDashboardAction"
+                    text="Show Dashboard" description="Show Code Historian dashboard">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt H"/>
+            </action>
+            <separator/>
+            <action id="CodeHistorian.Settings" class="io.codehistorian.intellij.actions.ShowSettingsAction"
+                    text="Settings" description="Open Code Historian settings"/>
+        </group>
+
+        <!-- Popup Menu Actions -->
+        <group id="CodeHistorian.EditorPopupMenu">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <action id="CodeHistorian.ShowHistory" class="io.codehistorian.intellij.actions.ShowHistoryAction"
+                    text="Show Code History" description="Show history for selected code">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt G"/>
+            </action>
+        </group>
+    </actions>
+</idea-plugin> 

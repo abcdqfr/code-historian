@@ -1,0 +1,97 @@
+.TH CODE-HISTORIAN 1 "2024" "Code Historian" "User Commands"
+.SH NAME
+code-historian \- analyze and visualize code evolution
+.SH SYNOPSIS
+.B code-historian
+[\fICOMMAND\fR] [\fIOPTIONS\fR] [\fIPATH\fR]
+.SH DESCRIPTION
+.B code-historian
+is a tool for analyzing and visualizing the evolution of code in a repository.
+It provides insights into code changes, patterns, and development trends.
+.SH COMMANDS
+.TP
+.BR init
+Initialize history tracking in the current directory
+.TP
+.BR analyze " [" \fIPATH\fR ]
+Analyze the specified repository or current directory
+.TP
+.BR watch
+Monitor repository for changes in real-time
+.TP
+.BR config " {" get | set | init }
+Manage configuration settings
+.TP
+.BR plugin " {" list | install | remove }
+Manage plugins
+.SH OPTIONS
+.TP
+.BR \-\-output\-dir =\fIDIR\fR
+Specify output directory for reports
+.TP
+.BR \-\-history\-dir =\fIDIR\fR
+Specify history directory location
+.TP
+.BR \-\-format =\fIFORMAT\fR
+Specify output format (markdown, json, html)
+.TP
+.BR \-\-plugins =\fIPLUGINS\fR
+Comma-separated list of plugins to use
+.TP
+.BR \-\-ml\-enabled
+Enable machine learning features
+.SH FILES
+.TP
+.I ~/.config/code-historian/config.toml
+User configuration file
+.TP
+.I .code-historian/
+Project-specific directory
+.TP
+.I .code-historian/config.toml
+Project configuration file
+.SH ENVIRONMENT
+.TP
+.B CODE_HISTORIAN_CONFIG
+Path to configuration file
+.TP
+.B CODE_HISTORIAN_HISTORY_DIR
+Path to history directory
+.TP
+.B CODE_HISTORIAN_OUTPUT_DIR
+Path to output directory
+.SH EXIT STATUS
+.TP
+.BR 0
+Success
+.TP
+.BR 1
+General error
+.TP
+.BR 2
+Configuration error
+.TP
+.BR 3
+Plugin error
+.SH EXAMPLES
+.TP
+Initialize a new repository:
+.B code-historian init
+.TP
+Analyze current directory:
+.B code-historian analyze
+.TP
+Watch for changes:
+.B code-historian watch
+.TP
+Set configuration value:
+.B code-historian config set history.enabled true
+.SH SEE ALSO
+.BR git (1),
+.BR code-historian-analyze (1),
+.BR code-historian-config (1),
+.BR code-historian-plugin (1)
+.SH BUGS
+Report bugs at https://github.com/code-historian/code-historian/issues
+.SH AUTHOR
+Code Historian Team 

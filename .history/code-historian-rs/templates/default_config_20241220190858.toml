@@ -1,0 +1,166 @@
+# Code Historian Configuration
+
+[core]
+# Default output directory (relative to repository root)
+output_dir = "docs/history"
+
+# Default history directory (relative to repository root)
+history_dir = ".code-historian"
+
+# Enable machine learning features
+ml_enabled = true
+
+# Enable visualization generation
+visualization_enabled = true
+
+# Default output format
+output_format = "markdown"
+
+[analysis]
+# Analyze recursively in subdirectories
+recursive = true
+
+# File patterns to include (comma-separated)
+include_patterns = ["*.rs", "*.toml", "*.md"]
+
+# File patterns to exclude (comma-separated)
+exclude_patterns = ["target/*", "*.lock"]
+
+# Minimum impact score for changes (0.0 to 1.0)
+min_impact_score = 0.1
+
+# Maximum number of changes to analyze per commit
+max_changes_per_commit = 1000
+
+[plugins]
+# Enable plugin system
+enabled = true
+
+# Auto-load plugins on startup
+auto_load = true
+
+# Plugin directory (relative to history directory)
+directory = "plugins"
+
+# Enabled plugins (comma-separated)
+enabled_plugins = ["security", "performance"]
+
+[watch]
+# Enable watch mode features
+enabled = true
+
+# Debounce duration in seconds
+debounce = 2
+
+# Auto-analyze on changes
+auto_analyze = true
+
+# Auto-generate visualizations
+auto_visualize = true
+
+[cache]
+# Enable caching
+enabled = true
+
+# Cache directory (relative to history directory)
+directory = "cache"
+
+# Maximum cache size in MB
+max_size = 1000
+
+# Cache TTL in hours
+ttl = 24
+
+[visualization]
+# Output directory for visualizations (relative to output directory)
+directory = "visualizations"
+
+# Default visualization theme
+theme = "default"
+
+# Enable interactive visualizations
+interactive = true
+
+# Maximum data points per visualization
+max_data_points = 1000
+
+[security]
+# Enable security analysis
+enabled = true
+
+# Severity threshold (info, warning, error)
+severity_threshold = "warning"
+
+# Scan for sensitive data
+scan_sensitive = true
+
+# Custom patterns (regex)
+patterns = [
+    "password\\s*=",
+    "api[_-]?key\\s*=",
+    "secret\\s*=",
+]
+
+[performance]
+# Enable performance analysis
+enabled = true
+
+# Complexity threshold
+complexity_threshold = 10
+
+# Memory usage threshold (MB)
+memory_threshold = 1000
+
+# Custom metrics
+metrics = [
+    "cyclomatic_complexity",
+    "cognitive_complexity",
+    "lines_of_code",
+]
+
+[documentation]
+# Enable documentation analysis
+enabled = true
+
+# Coverage threshold (0.0 to 1.0)
+coverage_threshold = 0.8
+
+# Required sections
+required_sections = [
+    "Overview",
+    "Installation",
+    "Usage",
+    "Configuration",
+]
+
+[ml]
+# Model directory (relative to history directory)
+model_dir = "models"
+
+# Minimum confidence score (0.0 to 1.0)
+min_confidence = 0.8
+
+# Auto-train on new data
+auto_train = true
+
+# Training data size limit
+max_training_size = 10000
+
+[reporting]
+# Report format (markdown, json, html)
+format = "markdown"
+
+# Include sections
+sections = [
+    "summary",
+    "changes",
+    "patterns",
+    "metrics",
+    "recommendations",
+]
+
+# Enable detailed reports
+detailed = true
+
+# Maximum report size (KB)
+max_size = 1000 

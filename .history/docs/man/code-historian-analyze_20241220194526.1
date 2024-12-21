@@ -1,0 +1,129 @@
+.TH CODE-HISTORIAN-ANALYZE 1 "2024" "Code Historian" "User Commands"
+.SH NAME
+code-historian-analyze \- analyze code evolution in a repository
+.SH SYNOPSIS
+.B code-historian analyze
+[\fIOPTIONS\fR] [\fIPATH\fR]
+.SH DESCRIPTION
+.B code-historian analyze
+performs a detailed analysis of code evolution in a Git repository.
+It examines commit history, identifies patterns, and generates reports.
+.SH OPTIONS
+.TP
+.BR \-\-from =\fIDATE\fR
+Start analysis from this date
+.TP
+.BR \-\-to =\fIDATE\fR
+End analysis at this date
+.TP
+.BR \-\-authors =\fIAUTHORS\fR
+Filter by comma-separated list of authors
+.TP
+.BR \-\-categories =\fICATEGORIES\fR
+Filter by comma-separated list of change categories
+.TP
+.BR \-\-min\-impact =\fISCORE\fR
+Filter changes by minimum impact score (0.0-1.0)
+.TP
+.BR \-\-files =\fIPATTERN\fR
+Filter by file pattern (glob syntax)
+.TP
+.BR \-\-output\-dir =\fIDIR\fR
+Specify output directory for reports
+.TP
+.BR \-\-format =\fIFORMAT\fR
+Specify output format (markdown, json, html)
+.TP
+.BR \-\-plugins =\fIPLUGINS\fR
+Comma-separated list of plugins to use
+.TP
+.BR \-\-ml\-enabled
+Enable machine learning features
+.TP
+.BR \-\-cache
+Enable caching of analysis results
+.TP
+.BR \-\-verbose
+Enable verbose output
+.SH OUTPUT FORMATS
+.TP
+.B markdown
+Generate Markdown reports with embedded visualizations
+.TP
+.B json
+Generate machine-readable JSON data
+.TP
+.B html
+Generate interactive HTML reports with charts
+.SH ANALYSIS CATEGORIES
+.TP
+.B feature
+New feature implementation
+.TP
+.B bugfix
+Bug fixes and corrections
+.TP
+.B refactor
+Code restructuring and improvements
+.TP
+.B docs
+Documentation changes
+.TP
+.B test
+Test-related changes
+.TP
+.B style
+Code style and formatting changes
+.SH EXAMPLES
+.TP
+Analyze current directory:
+.B code-historian analyze
+.TP
+Analyze specific directory:
+.B code-historian analyze /path/to/repo
+.TP
+Analyze with date range:
+.B code-historian analyze --from 2024-01-01 --to 2024-12-31
+.TP
+Filter by authors:
+.B code-historian analyze --authors="john@example.com,jane@example.com"
+.TP
+Filter by categories:
+.B code-historian analyze --categories="feature,bugfix"
+.TP
+Generate HTML report:
+.B code-historian analyze --format=html --output-dir=reports
+.SH FILES
+.TP
+.I .code-historian/cache/
+Analysis cache directory
+.TP
+.I .code-historian/reports/
+Default output directory for reports
+.SH ENVIRONMENT
+.TP
+.B CODE_HISTORIAN_CACHE_DIR
+Override default cache directory
+.TP
+.B CODE_HISTORIAN_OUTPUT_DIR
+Override default output directory
+.SH EXIT STATUS
+.TP
+.BR 0
+Success
+.TP
+.BR 1
+Analysis error
+.TP
+.BR 2
+Invalid arguments
+.TP
+.BR 3
+Repository access error
+.SH SEE ALSO
+.BR code-historian (1),
+.BR git-log (1)
+.SH BUGS
+Report bugs at https://github.com/code-historian/code-historian/issues
+.SH AUTHOR
+Code Historian Team 

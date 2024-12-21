@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Code Historian
+Bundle-SymbolicName: io.codehistorian.eclipse;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: io.codehistorian.eclipse.Activator
+Bundle-Vendor: Code Historian
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.jdt.core,
+ org.eclipse.jgit,
+ com.google.gson
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-ActivationPolicy: lazy
+Export-Package: io.codehistorian.eclipse,
+ io.codehistorian.eclipse.views,
+ io.codehistorian.eclipse.actions 

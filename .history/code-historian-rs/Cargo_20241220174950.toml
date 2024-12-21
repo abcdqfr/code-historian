@@ -1,0 +1,74 @@
+[package]
+name = "code-historian"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A powerful tool for analyzing code evolution in software projects"
+license = "MIT"
+
+[dependencies]
+# Core functionality
+tokio = { version = "1.34", features = ["full"] }
+clap = { version = "4.4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# Git integration
+git2 = "0.18"
+
+# Parsing and analysis
+tree-sitter = "0.20"
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+quote = "1.0"
+
+# Visualization
+plotters = "0.3"
+graphviz-rust = "0.6"
+
+# Async utilities
+futures = "0.3"
+async-trait = "0.1"
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Logging and diagnostics
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# File handling
+walkdir = "2.4"
+ignore = "0.4"
+
+# Progress reporting
+indicatif = "0.17"
+console = "0.15"
+
+# Date and time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Configuration and interactive mode
+directories = "5.0"
+dialoguer = "0.11"
+colored = "2.0"
+
+[dev-dependencies]
+tokio-test = "0.4"
+pretty_assertions = "1.4"
+test-case = "3.3"
+tempfile = "3.2"
+
+[features]
+default = ["visualization"]
+visualization = []
+plugin-system = []
+
+[[bin]]
+name = "code-historian"
+path = "src/main.rs"
+
+[lib]
+name = "code_historian"
+path = "src/lib.rs"

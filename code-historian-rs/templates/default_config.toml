@@ -1,0 +1,160 @@
+# Code Historian Configuration
+
+[general]
+# Default output format (markdown, json, or html)
+default_format = "html"
+
+# Default history directory name
+history_dir = ".code-historian"
+
+# Enable machine learning features
+enable_ml = true
+
+# Enable real-time monitoring
+enable_watch = true
+
+[analysis]
+# Minimum impact score for high-impact changes
+high_impact_threshold = 7.0
+
+# Categories to track
+categories = [
+    "Architecture",
+    "API",
+    "Logic",
+    "Data",
+    "ErrorHandling",
+    "Logging",
+    "Documentation",
+    "Testing",
+    "Performance",
+    "Security",
+    "Refactoring",
+    "Dependencies",
+    "Configuration",
+    "UiUx",
+    "Accessibility"
+]
+
+# File patterns to ignore
+ignore_patterns = [
+    "*.log",
+    "*.tmp",
+    "node_modules/**",
+    "target/**",
+    "dist/**",
+    "build/**",
+    ".git/**"
+]
+
+[visualization]
+# Enable interactive visualizations
+interactive = true
+
+# Chart color scheme
+colors = [
+    "#4C9AFF",
+    "#F66D44",
+    "#6C8EBF",
+    "#8DB600",
+    "#D162DE",
+    "#FFB55A"
+]
+
+# Timeline chart settings
+[visualization.timeline]
+interval = "day"
+show_markers = true
+show_tooltips = true
+
+# Category distribution chart settings
+[visualization.categories]
+chart_type = "pie"
+show_percentages = true
+show_legend = true
+
+# Impact distribution chart settings
+[visualization.impact]
+chart_type = "bar"
+show_average = true
+show_threshold = true
+
+[plugins]
+# Enable plugin system
+enable = true
+
+# Auto-update plugins
+auto_update = true
+
+# Plugin directory
+directory = "plugins"
+
+# Trusted plugin sources
+trusted_sources = [
+    "https://plugins.code-historian.dev"
+]
+
+[cache]
+# Enable caching
+enable = true
+
+# Maximum cache size (in MB)
+max_size = 1000
+
+# Cache directory
+directory = "cache"
+
+# Cache expiration (in days)
+expiration = 30
+
+[output]
+# Output directory
+directory = "reports"
+
+# Create subdirectories by date
+date_subdirs = true
+
+# Compress old reports
+compress_old = true
+
+# Keep reports for (in days)
+keep_days = 90
+
+[watch]
+# Watch mode settings
+interval = 2
+debounce = 1000
+recursive = true
+
+# Events to watch for
+events = [
+    "create",
+    "write",
+    "remove",
+    "rename"
+]
+
+[security]
+# Enable sandbox mode for plugins
+sandbox = true
+
+# Verify plugin signatures
+verify_signatures = true
+
+# Allow network access for plugins
+allow_network = false
+
+[logging]
+# Log level (error, warn, info, debug, trace)
+level = "info"
+
+# Enable file logging
+file_logging = true
+
+# Log file path
+log_file = "code-historian.log"
+
+# Log rotation
+rotate_logs = true
+max_log_files = 5
+max_log_size = 10 # MB 
